@@ -1,0 +1,128 @@
+// Copyright 2023 Google LLC
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "com.android.tools.build:gradle:7.2.1"
+  }
+}
+
+def isNewArchitectureEnabled() {
+  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+}
+
+plugins {
+  id "com.google.cloud.artifactregistry.gradle-plugin" version "2.1.5"
+}
+apply plugin: "com.android.library"
+
+
+def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+
+if (isNewArchitectureEnabled()) {
+  apply plugin: "com.facebook.react"
+}
+
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["ReactNativeDriverSdk_" + name]
+}
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["ReactNativeDriverSdk_" + name]).toInteger()
+}
+
+android {
+  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
+
+  defaultConfig {
+    minSdkVersion 23
+    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+
+  lintOptions {
+    disable "GradleCompatible"
+    disable 'LongLogTag'
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+
+allprojects {
+  // Required: you must exclude the Google Play service Maps SDK from
+  // your transitive dependencies. This is to ensure there won't be
+  // multiple copies of Google Maps SDK in your binary, as the Navigation
+  // SDK already bundles the Google Maps SDK.
+  configurations {
+    implementation {
+      exclude group: 'com.google.android.gms', module: 'play-services-maps'
+    }
+  }
+}
+
+repositories {
+  google()
+  mavenCentral()
+}
+
+dependencies {
+  // For < 0.71, this will be from the local maven repo
+  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
+  //noinspection GradleDynamicVersion
+  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:5.0.0'
+  implementation 'io.grpc:grpc-android:1.12.0'
+  implementation 'io.grpc:grpc-okhttp:1.12.0'
+  implementation "com.facebook.react:react-native:+"
+  implementation 'androidx.appcompat:appcompat:1.4.2'
+  implementation 'com.google.code.gson:gson:2.10.1'
+  implementation "com.google.guava:guava:31.0.1-android"
+  implementation "androidx.concurrent:concurrent-futures:1.1.0"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0"
+  implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+  implementation "com.squareup.retrofit2:retrofit:2.9.0"
+  implementation "com.squareup.retrofit2:adapter-guava:2.9.0"
+  implementation "com.google.guava:guava:31.1-android"
+  implementation "joda-time:joda-time:2.10.10"
+  implementation 'junit:junit:4.12'
+  testImplementation 'junit:junit:4.12'
+  annotationProcessor "com.google.auto.value:auto-value:1.8.2"
+  implementation "androidx.core:core:1.8.0"
+  implementation "org.checkerframework:checker-qual:3.18.0"
+  testImplementation "com.google.truth:truth:1.1.2"
+  testImplementation "org.mockito:mockito-core:3.6.0"
+  implementation "org.mockito:mockito-core:3.6.0"
+  testImplementation "org.mockito:mockito-inline:3.6.0"
+  testImplementation "com.squareup.okhttp3:okhttp:3.14.2"
+}
+
+if (isNewArchitectureEnabled()) {
+  react {
+    jsRootDir = file("../src/")
+    libraryName = "ReactNativeDriverSdk"
+    codegenJavaPackageName = "com.google.android.react.driversdk"
+  }
+}

@@ -1,0 +1,339 @@
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  Switch,
+  Dimensions,
+  Platform,
+  findNodeHandle,
+} from "react-native";
+import {
+  MapViewCallbacks,
+  MapViewController,
+} from 'react-native-navigation-sdk/components/maps/mapView/types';
+
+import NavigationView from 'react-native-navigation-sdk/components/navigation/navigationView/index';
+import {RouteStatus, TravelMode, Waypoint} from 'react-native-navigation-sdk/components/navigation/types';
+
+import {
+  ArrivalEvent,
+  NavigationViewCallbacks,
+  NavigationViewController,
+  RoutingOptions,
+} from 'react-native-navigation-sdk/components/navigation/navigationView/types';
+
+import DeliveryDriverApi from 'react-native-driver-sdk/components/delivery/deliveryDriverApi';
+
+const BASE_URL = Platform.OS == "android" ? "http://10.0.2.2:8080" : "http://localhost:8080";
+const VEHICLE_ID = "Vehicle1";
+const PROVIDER_ID = "cabrio-1501793433270";
+
+function App(): JSX.Element {
+  const deliveryDriverApi = new DeliveryDriverApi();
+
+  const [navigationViewController, setNavigationViewController] = useState<NavigationViewController | null>(null);
+  
+  const [shouldShowControls, setShouldShowControls] = useState(false);
+  const [isAbnormalTerminationEnabled, setIsAbnormalTerminationEnabled] = useState(true);
+  const [isLocationTrackingEnabled, setIsLocationTrackingEnabled] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [navigationViewId, setNavigationViewId] = useState<number | null>(null);
+
+  useEffect(() => {
+    console.log("init");
+    fetchAuthToken();
+
+    return () => {
+      clearInstance();
+    };
+  }, []);
+
+
+  const height =
+        Dimensions.get("window").height - 0.1 * Dimensions.get("window").height;
+  const width = Dimensions.get("window").width;
+
+  const fetchAuthToken = async () => {
+    try {
+      console.log('getToken');
+      const tokenUrl = BASE_URL + "/token/delivery_driver/" + VEHICLE_ID;
+      const response = await fetch(tokenUrl);
+      const { token } = await response.json();
+
+      setAuthToken(token);
+    } catch (error) {
+      console.log("There has been a problem connecting to the provider, please make sure it is running. ", error);
+    }
+  };
+
+  const createInstance = async () => {
+    try {
+      console.log("lmfs create instance");
+      await deliveryDriverApi
+        .initialize(
+          PROVIDER_ID,
+          VEHICLE_ID,
+          navigationViewId || 0,
+          (tokenContext) => {
+            console.log("onGetToken call");
+            // Check if the token is expired, in such case request a new one.
+            return Promise.resolve(authToken || "");
+          },
+          (statusLevel, statusCode, message) => {
+            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+          }
+        );
+
+        deliveryDriverApi.getDeliveryVehicleReporter().setListener({
+          onVehicleUpdateSucceed(vehicleUpdate) {
+            console.log("onVehicleUpdateSucceed: ", vehicleUpdate);
+          },
+          onVehicleUpdateFailed(vehicleUpdate, error) {
+            console.log("onVehicleUpdateFailed: ", error);
+          },
+      });
+    } catch (error) {
+      console.log("createInstance ", error);
+    }
+  };
+
+  const clearInstance = async () => {
+    await deliveryDriverApi.clearInstance();
+  };
+
+  
+  const onGetDeliveryVehicleClick = async () => {
+    try {
+      const vehicle = await deliveryDriverApi.getDeliveryVehicleManager().getDeliveryVehicle();
+      console.log("Vehicle: ", vehicle);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const onArrival = (arrival: ArrivalEvent) => {
+    if (arrival.isFinalDestination) {
+      console.log("odrd Final destination reached");
+      navigationViewController?.stopGuidance();
+      navigationViewController?.clearDestinations();
+    } else {
+      console.log("odrd Continuing to the next destination");
+      navigationViewController?.continueToNextDestination();
+    }
+    console.log("odrd arrived");
+  };
+
+  const onGetDriverSDKVersionClick = async () => {
+    try {
+      const version = await deliveryDriverApi.getDriverSdkVersion();
+      console.log("DriverSDK version: ", version);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const setUpdateInterval = async () => {
+    try {
+      await deliveryDriverApi.getDeliveryVehicleReporter().setLocationReportingInterval(20);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const closeDialog = () => {
+    setShouldShowControls(false);
+  };
+
+  const onMapReady = () => {
+    console.log("onMapReady");
+  };
+
+  const runNavigation = () => {
+    const firstWaypoint = {
+      placeId: 'ChIJw____96GhYARCVVwg5cT7c0', // Golden gate, SF
+    };
+
+    const secondWaypoint = {
+      placeId: 'ChIJkXCsHWSAhYARsGBBQYcj-V0', // 1 Market st, SF
+    };
+
+    const routingOptions: RoutingOptions = {
+      travelMode: TravelMode.DRIVING,
+      avoidFerries: true,
+      avoidTolls: false,
+    };
+
+    navigationViewController?.setDestinations([firstWaypoint, secondWaypoint], routingOptions);
+  };
+
+  const onStartingGuidanceError = () => {
+    console.log("Error: Starting Guidance Error");
+  };
+
+  const onRouteStatusResult = (routeStatus: RouteStatus) => {
+    switch (routeStatus) {
+      case RouteStatus.OK:
+        navigationViewController?.startGuidance();
+    
+        navigationViewController?.simulator.simulateLocationsAlongExistingRoute({
+          speedMultiplier: 2 
+        });
+        break;
+      case RouteStatus.ROUTE_CANCELED:
+        console.log("ROUTE_CANCELED");
+        break;
+      case RouteStatus.NO_ROUTE_FOUND:
+        console.log("NO_ROUTE_FOUND");
+        break;
+      case RouteStatus.NETWORK_ERROR:
+        console.log("NETWORK_ERROR");
+        break;
+      case RouteStatus.LOCATION_DISABLED:
+        console.log("LOCATION_DISABLED");
+        break;
+      case RouteStatus.LOCATION_UNKNOWN:
+        console.log("LOCATION_UNKNOWN");
+        break;
+      default:
+        onStartingGuidanceError();
+    }
+  };
+
+  const mapViewCallbacks: MapViewCallbacks = {
+    onMapReady,
+  };
+
+  const navigationViewCallbacks: NavigationViewCallbacks = {
+    onArrival,
+    onRouteStatusResult,
+  };
+
+  const toggleLocationTrackingEnabled = () => {
+    const updatedValue = !isLocationTrackingEnabled;
+    setIsLocationTrackingEnabled(updatedValue);
+
+    if (updatedValue) {
+      navigationViewController?.startUpdatingLocation();
+    } else {
+      navigationViewController?.stopUpdatingLocation();
+    }
+
+    deliveryDriverApi.getDeliveryVehicleReporter().setLocationTrackingEnabled(updatedValue);
+  }
+
+  const toggleAbnormalTerminationReporting = () => {
+    const updatedValue = !isAbnormalTerminationEnabled;
+    setIsAbnormalTerminationEnabled(updatedValue);
+
+    deliveryDriverApi.setAbnormalTerminationReportingEnabled(updatedValue);
+  };
+
+
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          flexDirection: "column",
+        },
+      ]}
+    >
+      <View style={{ flex: 1 }}>
+        <View>
+          <NavigationView
+            width={width}
+            height={height}
+            navigationViewCallbacks={navigationViewCallbacks}
+            mapViewCallbacks={mapViewCallbacks}
+            onNavigationViewControllerCreated={setNavigationViewController}
+            onMapViewControllerCreated={() => {}}
+            termsAndConditionsDialogOptions={{}}
+            androidStylingOptions={{
+              primaryDayModeThemeColor: '#34eba8',
+              headerDistanceValueTextColor: '#76b5c5',
+              headerInstructionsFirstRowTextSize: '20f',
+            }}
+            iOSStylingOptions={{
+              navigationHeaderPrimaryBackgroundColor: '#34eba8',
+              navigationHeaderDistanceValueTextColor: '#76b5c5',
+            }}
+            ref={
+              element => {
+                setNavigationViewId(findNodeHandle(element) || 0);
+              }
+            }
+          />
+        </View>
+      </View>
+      <View style={{ flex: 2, margin: 20 }}>
+        {shouldShowControls ? (
+          <View style={{ backgroundColor: "#2196f3" }}>
+            <Button title="Create Instance" onPress={createInstance} />
+            <Button title="Clear Instance" onPress={clearInstance} />
+            <Button
+              title="Update time interval"
+              onPress={setUpdateInterval}
+            />
+            <Button
+              title="Run navigation"
+              onPress={runNavigation}
+            />
+            <Button
+              title="Get DriverSDK Version"
+              onPress={onGetDriverSDKVersionClick}
+            />
+            <Button
+              title="Get delivery vehicle"
+              onPress={onGetDeliveryVehicleClick}
+            />
+            <View style={styles.rowContainer}>
+              <Text>Location Tracking</Text>
+              <Switch
+                value={isLocationTrackingEnabled}
+                onValueChange={() => {
+                  toggleLocationTrackingEnabled();
+                }}
+              />
+            </View>
+            <View style={styles.rowContainer}>
+              <Text>Abnormal Termination Reporting</Text>
+              <Switch
+                value={isAbnormalTerminationEnabled}
+                onValueChange={() => {
+                  toggleAbnormalTerminationReporting();
+                }}
+              />
+            </View>
+            <Button title="Close" onPress={closeDialog} />
+          </View>
+        ) : null}
+      </View>
+      <View style={styles.controlButton}>
+        <Button
+          title="Show controls"
+          onPress={() => setShouldShowControls(!shouldShowControls)}
+        />
+      </View>
+    </View>
+  );
+}
+
+export default App;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignSelf: "flex-end",
+  },
+  controlButton: {
+    backgroundColor: "red",
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+});
