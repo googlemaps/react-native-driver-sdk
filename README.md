@@ -2,437 +2,241 @@
 
 ## Description
 
-This repository contains a library to support cross platform development for the DriverSDK using React Native.
+This is the beta release of the Google Driver SDK package for React Native. It is an early look at the package and is intended for testing and feedback collection. The functionalities and APIs in this version are subject to change.
+
+## Requirements
+
+|             | Android | iOS       |
+| ----------- | ------- | --------- |
+| **Support** | SDK 23+ | iOS 14.0+ |
+
+* A React Native project
+* A Google Cloud project with the [Navigation SDK enabled](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project) and the [Maps SDK for iOS enabled](https://developers.google.com/maps/documentation/navigation/ios-sdk/config)
+* An API key from the project above
+* If targeting Android, [Google Play Services](https://developers.google.com/android/guides/overview) installed and enabled
+* [Attributions and licensing text](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project#include_the_required_attributions_in_your_app) added to your app.
+* Install the [react-native-navigation-sdk](https://github.com/googlemaps/react-native-navigation-sdk) library on your application and set up a `NavigationView`.
 
 
-## Prerequisites
+## Installation
 
-1. This library requires the usage of the Navigation SDK (either manually or via library)
+1. This repository is currently private. In order to install the library, you must authenticate with SSH first. See [Connecting to GitHub with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh) for instructions on how to provide SSH keys.
 
-   https://github.com/googlemaps/react-native-navigation-sdk
+1. To install the library run the following command from your project root: 
 
-2)  The provider server connected to your fleet engine should be prepared and running.
+`npm install --save https://github.com/googlemaps/react-native-driver-sdk#{version_tag}`
 
-      For DeliveryDriverAPI clone and download the sample provider server in repository:
-        https://github.com/googlemaps/last-mile-fleet-solution-samples
+### Android
 
-      For RideSharingAPI clone and download the sample provider server in repository:
-        https://github.com/googlemaps/java-on-demand-rides-deliveries-stub-provider
+1. Set the `minSdkVersion` in `android/app/build.gradle`:
 
+```groovy
+android {
+    defaultConfig {
+        minSdkVersion 23
+    }
+}
+```
 
-      Make sure the following endpoints exist for the JWT AuthToken
+### iOS
 
-         /token/delivery_driver/{vehicle_id} - for DeliveryDriverAPI
-         /token/driver/{vehicle_id} - for RideSharingAPI
+1. Set the iOS version in your application PodFile.
 
-3)  Create a vehicle, vehicle is required to be created for both DeliveryDriverAPI and RideSharingAPI.
+   `platform: ios, '14.0'`
 
-  <details>
-    <summary>DeliveryDriverAPI</summary>
-    
-    The setup for creating a vehicle for DeliveryDriverAPI may not be sufficient to contain in a single readme file. Please visit https://github.com/googlemaps/last-mile-fleet-solution-samples for more information.
+## Usage
 
-  </details>
+### Ridesharing
+#### Initializing the API
 
-  <details>
-    <summary>RideSharingAPI</summary>
-    URL: http://localhost:8080/vehicle/new
-    
-    Body:
+1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/SampleApp) for all details on how to set up the navigation component.
 
-        {
-          "vehicleId": "vehicle_3342",
-          "supportedTripTypes": ["EXCLUSIVE"],
-          "backToBackEnabled": false,
-          "maximumCapacity": 4
-        }
+1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
-  Reponse:
+```typescript
+        import RidesharingDriverapi from "react-native-driver-sdk/components/ridesharing/RidesharingDriverApi";
 
-        {
-          "name": "providers/mobility-partner-access/vehicles/vehicle_3342",
-          "vehicleState": "ONLINE",
-          "waypoints": [],
-          "currentTripsIds": [],
-          "backToBackEnabled": false,
-          "maximumCapacity": 4,
-          "supportedTripTypes": [
-              "EXCLUSIVE"
-          ],
-          "lastLocation": {
-              "point": {
-                  "latitude": 37.419645,
-                  "longitude": -122.073884
-              },
-              "heading": 0
+        const ridesharing = new RidesharingDriverapi();
+```
+
+1. Second step is to initialize the Api. Make sure to capture the viewId associated to the `NavigationView` component prior to this as it's needed.
+
+```typescript
+    await ridesharingDriverApi
+        .initialize(
+          PROVIDER_ID,
+          VEHICLE_ID,
+          navigationViewId,
+          (tokenContext) => {
+            // Check if the token is expired, in such case request a new one.
+            return Promise.resolve(authToken || "");
           },
-          "vehicleAttributes": [],
-          "vehicleType": {
-              "category_": 1,
-              "memoizedIsInitialized": -1,
-              "unknownFields": {
-                  "fields": {},
-                  "fieldsDescending": {}
-              },
-              "memoizedSize": -1,
-              "memoizedHashCode": 0
-          },
-          "etaToFirstWaypoint": {
-              "seconds_": 0,
-              "nanos_": 0,
-              "memoizedIsInitialized": -1,
-              "unknownFields": {
-                  "fields": {},
-                  "fieldsDescending": {}
-              },
-              "memoizedSize": -1,
-              "memoizedHashCode": 0
+          (statusLevel, statusCode, message) => {
+            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
           }
-        }
+        );
+```
 
-  </details>
+Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
 
-## How to install/setup
 
-#### Please perform the following, in order, before proceeding to next section (How to implement RideSharingAPI)
+#### Getting a `RidesharingVehicleReporter`
 
-1.  Run this in your project root directory:
+The vehicle reporter allows developers to enable/disable location reporting to Fleet Engine, as well as to report changes in the vehicle state (E.g. Online or Offline).
 
-    `npm install --save https://github.com/googlemaps/react-native-driver-sdk.git`
+```typescript
+  const vehicleReporter = ridesharingDriverApi.getRidesharingVehicleReporter()
+  await vehicleReporter.setLocationTrackingEnabled(true);
+  await vehicleReporter.setVehicleState(VehicleState.ONLINE);
+```
 
-2.  In your react native project, open the generated android folder in Android Studio. Open app module level build.gradle and add the following line below:
+### Delivery
+#### Initializing the API
 
-        plugins {
-            id "com.google.cloud.artifactregistry.gradle-plugin" version "2.1.5"
-        }
+1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/SampleApp) for all details on how to set up the navigation component.
 
-        repositories {
-            maven {
-                url "artifactregistry://us-west2-maven.pkg.dev/gmp-artifacts/transportation"
-            }
-        }
+1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
-3.  In your Google cloud console, add the Google API key to the project. Add this newly created API key to the local.properties file.
+```typescript
+        import DeliveryDriverapi from "react-native-driver-sdk/components/delivery/DeliveryDriverapi";
 
-          MAPS_API_KEY=<place your map api key here>
+        const deliveryApi = new DeliveryDriverapi();
+```
 
-## How to implement RideSharingAPI
+1. Second step is to initialize the Api. Make sure to capture the viewId associated to the `NavigationView` component prior to this as it's needed.
 
-### Initializing the API
+```typescript
+    await deliveryApi
+        .initialize(
+          PROVIDER_ID,
+          DELIVERY_VEHICLE_ID,
+          navigationViewId,
+          (tokenContext) => {
+            // Check if the token is expired, in such case request a new one.
+            return Promise.resolve(authToken || "");
+          },
+          (statusLevel, statusCode, message) => {
+            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+          }
+        );
+```
 
-First step, In your react-native component, import and instantiate the RideSharingModule and reference it through variable.
+Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
 
-        import RideSharingModule from "react-native-driver-sdk/components/RideSharingAPI/RidesharingModule";
 
-        const _rideSharingModule = new RideSharingModule();
+#### Getting a `DeliveryVehicleReporter`
 
-Second step is to add listener to capture the updateStatus result. The code snippet below should apply in useEffect() method.
+The vehicle reporter allows developers to enable/disable location reporting to Fleet Engine.
 
-       useEffect(() => {
-            _rideSharingModule.addListener(updateStatus);
-            return async () => {
-                // component did unmount
-                await _rideSharingModule.clearInstance();
-                _rideSharingModule.removeListeners();
-             }
-          }, []);
+```typescript
+  const vehicleReporter = deliveryApi.getRidesharingVehicleReporter()
+  await vehicleReporter.setLocationTrackingEnabled(true);
+  await vehicleReporter.setVehicleState(VehicleState.ONLINE);
+```
 
+#### Getting a `DeliveryVehicleManager`
 
-For example, in a newly built RN project via cli (npm i -g create-react-native-app) with the navigation sdk implemented via react-native-nav-sdk, in the function App of App.tsx:
-Observe how the code snippets above are inserted in the code below.
+The vehicle managers allows developers to fetch the `DeliveryVehicle` linked to the Driver Api from Fleet Engine.
 
-       function App(): JSX.Element {
-           const _rideSharingModule = new RideSharingModule();
-           let navViewRef: NavigationView = {};
+```typescript
+  const vehicleManager = deliveryApi.getDeliveryVehicleManager()
+  const deliveryVehicle = await vehicleManager.getDeliveryVehicle();
+```
 
-           useEffect(() => {
-             const height = Dimensions.get('window').height - 0.1 * Dimensions.get('window').height;
-             const width = Dimensions.get('window').width;
-             navViewRef.init(width, height);
-             _rideSharingModule.addListener(updateStatus);
-             return async () => {
-                await _rideSharingModule.clearInstance();
-                _rideSharingModule.removeListeners();
-            }
-           }, []);
+### Other APIs
 
-           return (
-             <SafeAreaView>
-               <NavigationView
-                 ref={
-                   child => {
-                     navViewRef = child
-                   }
-                 }
-                 onArrivalResult={opt => console.log('onArrivalResult: ', opt)}
-               />
-             </SafeAreaView>
-           );
-       }
+#### Set update interval status (seconds) - RideSharingAPI & DeliveryDriverAPI:
 
-### Authentication token
+To set the time interval of your vehicle updates, you can use the **setLocationReportingInterval** method of the Driver Api's. Pass the value in seconds of your preferred interval. See the sample code below where location will be updated every 20 seconds:
 
-Retrieve your JWT from the authentication service before creating any instances.
+```typescript
+  await driverApi.setLocationReportingInterval(20);
+```
 
-        const getToken = async () => {
-          const baseUrl = "http://127.0.0.1:8080";
-          const tokenUrl = baseUrl + "/token/driver/vehicle_A003";
-          const response = await fetch(tokenUrl);
-          const token = await response.json();
-          const authTokenRes = await rideSharingModule.setAuthToken(
-            token.jwt,
-            "vehicle_A003"
-          );
-        };
+#### Get the Driver SDK version: - RideSharingAPI & DeliveryDriverAPI:
 
-### Create RideSharingAPI Instance
+To get the DriverSDK version being used, you can call the **getDriverSdkVersion** method. See the sample code below:
 
-
-You can create the instance of RidesharingDriverApi using the **createRideSharingInstance** method. This is where you define the provider Id, host URL for the provider server, the vehicle Id.
-
-        try {
-            await rideSharingModule.createRidesharingInstance("<YOUR PROJECT ID>",url,"vehicle_A003",navViewRef.state.viewId)
-            .then(async () => {
-                const vehicleReporter = await rideSharingModule.createRidesharingVehicleReporter();
-            });
-        } catch (e) {
-            console.error(e);
-        }
-
-### Create RidesharingVehicleReporter
-
-You can create the RidesharingVehicleReporter using the **createRidesharingVehicleReporter** method. An instance of RidesharingDriverApi must be created before running this function.
-
-         rideSharingModule.createRidesharingVehicleReporter();
-
-## How to implement DeliveryDriverAPI
-
-### Initializing the API
-
-First step, In your react-native component, import and instantiate the DeliveryDriverModule and reference it through variable.
-
-          import DeliveryDriverModule from "react-native-driver-sdk/components/DeliveryDriverAPI/DeliveryDriverModule";
-
-          const deliveryDriverModule = new DeliveryDriverModule();
-
-Second step is to add listener to capture the updateStatus result. The code snippet below should apply in useEffect() method.
-
-        useEffect(() => {
-            const height = Dimensions.get("window").height - 0.1 * Dimensions.get("window").height;
-            const width = Dimensions.get("window").width;
-            navViewRef.init(width, height);
-            deliveryDriverModule.addListener(updateStatus);
-            return () => {};
-        }, []);
-
-
-For example, in a newly built RN project via cli (npm i -g create-react-native-app) with the navigation sdk implemented via react-native-nav-sdk, in the function App of App.tsx:
-Observe how the code snippets above are inserted in the code below.
-
-       function App(): JSX.Element {
-           const deliveryDriverModule = new DeliveryDriverModule();
-           let navViewRef: NavigationView = {};
-
-           useEffect(() => {
-                const height = Dimensions.get("window").height - 0.1 * Dimensions.get("window").height;
-                const width = Dimensions.get("window").width;
-                navViewRef.init(width, height);
-                deliveryDriverModule.addListener(updateStatus);
-                return () => {};
-           }, []);
-
-           return (
-             <SafeAreaView>
-               <NavigationView
-                 ref={
-                   child => {
-                     navViewRef = child
-                   }
-                 }
-                 onArrivalResult={opt => console.log('onArrivalResult: ', opt)}
-               />
-             </SafeAreaView>
-           );
-       }
-
-### Create DeliveryDriverAPI Instance
-You can create the instance of DeliveryDriverAPI using the **createDeliveryDriverInstance** method. This is where you define the provider Id, host URL for the provider server, the vehicle Id, and the view id of the NavSDK fragment.
-
-        let url: string = "http://localhost:8080";
-
-        try {
-            deliveryDriverModule.createDeliveryDriverInstance("<YOUR PROJECT ID>", url, "vehicle_A003");
-        } catch (error) {
-            console.log(error);
-        }
-
-## OTHER FUNCTIONS
-
-### Set vehicle status (offline/online) - RideSharingAPI only:
-
-To set the status of your vehicle to offline or online, you can use the **setVehicleState** method. Pass TRUE as parameter to set the status to online, else FALSE to set the status to offline. See the sample code below:
-
-         driverRef.setVehicleState(true);
-
-### Enable/disable location tracking - RideSharingAPI & DeliveryDriverAPI:
-
-To enable/disable location updates passed to the fleet engine, you can use the **setLocationTrackingEnabled** method. Pass TRUE as parameter to enable location updates, else FALSE to disable updates. See the sample code below:
-
-         driverRef.setLocationTrackingEnabled(isOn);
-
-### Set update interval status (seconds) - RideSharingAPI & DeliveryDriverAPI:
-
-To set the time interval of your vehicle updates, you can use the **setLocationReportingInterval** method. Pass the value in seconds of your preferred interval. See the sample code below where location will be updated every 20 seconds:
-
-         driverRef.setLocationReportingInterval(20);
-
-### Get the Driver SDK version: - RideSharingAPI & DeliveryDriverAPI:
-
-To get the DriverSDK version being used, you can call the **getRidesharingDriverSDKVersion** or **getDriverSdkVersion** method. See the sample code below:
-
-        const version = await deliveryDriverModule.getDriverSdkVersion();
-        console.log("version ", version);
-
-        const version = await rideSharingModule.getRidesharingDriverSDKVersion();
-        console.log("version ", version);
-
-### Get the Provider ID and Vehicle ID: - RideSharingAPI & DeliveryDriverAPI:
-
-To get the vehicle ID of the DriverContext, you can call the **getVehicleId** method. <br />
-To get the provider ID of the DriverContext, you can call the **getProviderId** method. <br />
-See the sample code below:
-
-        const vehicleId = await deliveryDriverModule.getVehicleId();
-        console.log("vehicleId ", vehicleId);
-
-        const providerId = await deliveryDriverModule.getProviderId();
-        console.log("providerId ", providerId);
-
-### Get the Vehicle Name, Destination Waypoint, and Remaining Vehicle Stops: - DeliveryDriverAPI:
-
-To get the vehicle's name, destination waypoints, remaining vehicle, you can call **getDeliveryVehicle** method
-See the sample code below:
-
-         const deliveryVehicle = await deliveryDriverModule.getDeliveryVehicle();
-         console.log(deliveryVehicle) // will return the DeliveryVehicle object
-
-
+```typescript
+  const sdkVersion = await driverApi.getDriverSdkVersion();
+```
 
 ### List of sample functions in ODRD
 
 | Function                                                                | Description                                                                                                     |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `createRidesharingInstance`                                      | create the instance of RidesharingAPI.        |
-| `createRidesharingVehicleReporter`                                         | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter.                                                                              |
-| `setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                        |
-| `setVehicleState(VehicleState)`                                           | Online/Offline of vehicle status.                                                                                        |
-| `setLocationReportingInterval(number)`                                           | Set the log interval(seconds).                                                                                            |                                                                             
-| `getDriverSdkVersion()`                                              | get ridesharing driversdk version.                             |
-| `clearInstance()`                                                     | async clear instance.                              |
-| `setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
+| `RidesharingDriverApi.initialize`                                      | create the instance of RidesharingAPI.        |
+| `RidesharingDriverApi.getRidesharingVehicleReporter`                                         | Vehicle reporter for the vehicle that reports location and vehicle state to Fleet Engine. An app is allowed only one vehicle reporter.                                                                              |
+| `RidesharingVehicleReporter.setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                        |
+| `RidesharingVehicleReporter.setVehicleState(VehicleState)`                                           | Set vehicle state to Online/Offline to Fleet Engine.
+| `RidesharingVehicleReporter.setLocationReportingInterval(number)`                                           | Set the reporting interval(seconds).                                                                                            |                                                                             
+| `RidesharingDriverApi.getDriverSdkVersion()`                                              | get native driversdk version.                             |
+| `RidesharingDriverApi.clearInstance()`                                                     | clear the api instance.                              |
+| `RidesharingDriverApi.setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
 
 
 ### List of sample functions in LMFS
 
 | Function                                                                | Description                                                                                                     |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `createDeliveryDriverInstance`                                      | create the instance of DeliveryDriverAPI.        |
-| `createDeliveryDriverReporter`                                         | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter.                                                                              |
-| `setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                 |
-| `setLocationReportingInterval(number)`                                           | Set the log interval(seconds).                                                                                            |                                                                
-| `getDriverSdkVersion()`                                              | get delivery driversdk version.                             |
-| `getVehicleId()`                                               | get vehicle id.                                               |
-| `getProviderId()`                                           | get provider id.                    |
-| `getDeliveryVehicle()`                                                     |  get delivery vehicle.|
-| `clearInstance()`                                                     |  clear instance.                              |
-| `setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
+| `DeliveryDriverApi.initialize`                                      | create the instance of DeliveryDriverAPI.        |
+| `DeliveryDriverApi.getDeliveryVehicleReporter`                                         | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter.                                                                              |
+| `DeliveryDriverApi.getDeliveryVehicleManager` | Returns a vehicle manager that can be used to fetch the delivery vehicle from Fleet Engine |
+| `DeliveryVehicleReporter.setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                 |
+| `DeliveryVehicleReporter.setLocationReportingInterval(number)`                                           | Set the log interval(seconds).                                                                                            |                                                                
+| `DeliveryVehicleReporter.getDriverSdkVersion()`                                              | get delivery driversdk version.                             |               |
+| `DeliveryVehicleManager.getDeliveryVehicle()`                                                     |  Fetch the delivery vehicle from Fleet Engine |
+| `DeliveryVehicleReporter.clearInstance()`                                                     |  clear instance.                              |
+| `DeliveryVehicleReporter.setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
+
+### Requesting and handling permissions
+
+The Google Navigation SDK React Native library offers functionalities that necessitate specific permissions from the mobile operating system. These include, but are not limited to, location services, background execution, and receiving background location updates.
+
+> [!NOTE]
+> The management of these permissions falls outside the scope of the Navigation SDKs for Android and iOS. As a developer integrating these SDKs into your applications, you are responsible for requesting and obtaining the necessary permissions from the users of your app.
+
+You can see example of handling permissions in the [app.tsx](./SampleApp/src/app.tsx) file of the sample application:
+
+```tsx
+import {request, PERMISSIONS, RESULTS} from 'react-native-permissions';
+
+// ...
+
+// Request permission for accessing the device's location.
+const requestPermissions = async () => {
+    const result = await request(
+        Platform.OS =="android" ? 
+            PERMISSIONS.ANDROID.ACCESS_COARSE_LOCATION : 
+            PERMISSIONS.IOS.LOCATION_ALWAYS,
+    );
+
+    if (result == RESULTS.GRANTED) {
+        setArePermissionsApproved(true);
+    } else {
+        Snackbar.show({
+            text: 'Permissions are needed to proceed with the app. Please re-open and accept.',
+            duration: Snackbar.LENGTH_SHORT,
+        });
+    }
+};
+```
 
 
+## Contributing
 
+See the [Contributing guide](./CONTRIBUTING.md).
 
-### Running the app:
+## Terms of Service
 
-Assuming that you followed the tutorial to setup your react native environment (https://reactnative.dev/docs/environment-setup). You can run your project through npx command. This will start the metro development server. Through terminal, go to your project folder and run the following command:
+This package uses Google Maps Platform services, and any use of Google Maps Platform is subject to the [Terms of Service](https://cloud.google.com/maps-platform/terms).
 
-         npx react-native run-android
+For clarity, this package, and each underlying component, is not a Google Maps Platform Core Service.
 
-Make sure the location permission is granted for the navigation sdk to work enabling it to give updates to the driversdk.
+## Support
 
-### How to run the Sample App
+This package is offered via an open source license. It is not governed by the Google Maps Platform Support [Technical Support Services Guidelines](https://cloud.google.com/maps-platform/terms/tssg), the [SLA](https://cloud.google.com/maps-platform/terms/sla), or the [Deprecation Policy](https://cloud.google.com/maps-platform/terms) (however, any Google Maps Platform services used by the library remain subject to the Google Maps Platform Terms of Service).
 
-## Android:
+This package adheres to [semantic versioning](https://semver.org/) to indicate when backwards-incompatible changes are introduced. Accordingly, while the library is in version 0.x, backwards-incompatible changes may be introduced at any time. 
 
-1. Download example/(choose between ODRD or LMFS)
-2. Run this command `npm install react-native` from the root of (ODRD/LMFS) folder. This will generate the `node_modules` from this sample app.
-3. Open the (ODRD/LMFS)/android folder in Android Studio and add your api key in local.properties.
-4. run `npx react-native run-android` command from the root of (ODRD/LMFS) folder.
-5. Make sure to run this command `adb reverse tcp:8080 tcp:8080` when using emulator. This will allow the emulator to connect with port 8080.
-
-## IOS:
-1. Download example/(choose between ODRD or LMFS)
-2. Run this command `npm install react-native` from the root of (ODRD/LMFS) folder. This will generate the `node_modules` from this sample app.
-3. Open the (ODRD/LMFS)/ios/SampleApp folder in Xcode and add your api key in info.plist
-4. Run this command `pod install` and `pod update` from the folder (ODRD/LMFS)/ios. This will install and update the library for ios. 
-5. in Xcode open the SampleApp.xcworkspace. From the tab Product select Build. Select the desired device and then click run.
-
-### How to check the vehicle logs using the Sample App:
-## ODRD
-  ### Android and IOS:
-  1. From the SampleApp/App.tsx:
-      a.) Make sure the value of `baseUrl`, `vehicleId` and `providerId` are correct.
-      b.) If needed, update the waypoints from the function of `runMultipleDestination`.
-      const runMultipleDestination = () => {
-        let wp1 = new Waypoint("ChIJl95qsG9_qTMRM3LemyzW7Tc"); // goforless
-        let wp2 = new Waypoint("ChIJDcQvDiV5qTMR8k9QVLLrcp8"); // chef
-
-        if (Platform.OS == "ios") {
-          wp1 = new Waypoint("ChIJSyQBrq55qTMRNDWEPZDs4nM"); // bonch
-          wp2 = new Waypoint("ChIJkZi9vD15qTMRke-N_gL0qq4"); // fam minis
-        }
-
-        const map = [wp1, wp2];
-
-        const routingOptions = new RoutingOptions(TravelMode.DRIVING);
-        routingOptions.avoidFerries = true;
-        routingOptions.avoidTolls = false;
-        mapViewRef.setRoutingOptions(routingOptions);
-        mapViewRef.setDestinations(map);
-        setShouldShowControls(false);
-      };
-  2. Run the SampleApp.
-  3. From the SampleApp, Click `Show controls`, select `Create Instance` and `Run`. To create instance and run the simulation.
-  4. To create a logs, From the `Show controls`, Switched on the `Location Tracking`.
-  5. Change the vehicle status by switch on (ONLINE) or switch off (OFFLINE) the `Vehicle Status`.
-  6. Check Logs in https://console.cloud.google.com/, select the project/provider. Open the Logs Explorer. 
-  7. Run Query `jsonPayload.request.vehicleId="vehicle_id"` and `jsonPayload.@type="type.googleapis.com/maps.fleetengine.v1.GetVehicleLog"`. This will show the logs created from the SampleApp.
-
-## LMFS
-   ### Android and IOS:
-   1. From the SampleApp/App.tsx:
-      a.) Make sure the value of `baseUrl`, `vehicleId` and `providerId` are correct.
-      b.) If needed, update the waypoints from the function of `initWaypoints`.
-      const initWaypoints = () => {
-        let wp1 = new Waypoint("ChIJq9YxEFB5qTMR0EFNc3VlgJc"); // anganas
-        let wp2 = new Waypoint("ChIJDcQvDiV5qTMR8k9QVLLrcp8"); // chef
-
-        if (Platform.OS == "ios") {
-          wp1 = new Waypoint("ChIJSyQBrq55qTMRNDWEPZDs4nM"); // bonch
-          wp2 = new Waypoint("ChIJkZi9vD15qTMRke-N_gL0qq4"); // fam minis
-        }
-
-        const map = [wp1, wp2];
-
-        const routingOptions = new RoutingOptions(TravelMode.DRIVING);
-        routingOptions.avoidFerries = true;
-        routingOptions.avoidTolls = false;
-        mapViewRef.setRoutingOptions(routingOptions);
-        mapViewRef.setDestinations(map);
-        setShouldShowControls(false);
-      };
-  2. Run the SampleApp.
-  3. From the SampleApp, Click `Show controls`, select `Create Instance` and `Run`. To create instance and run the simulation.
-  4. To create a logs, From the `Show controls`, Switched on the `Location Tracking`.
-  5. Check Logs in https://console.cloud.google.com/, select the project/provider. Open the Logs Explorer. 
-  6. Run Query `jsonPayload.request.deliveryVehicleId="vehicle_id""` and `jsonPayload.@type="type.googleapis.com/maps.fleetengine.delivery.log.v1.GetDeliveryVehicleLog"`. This will show the logs created from the SampleApp.
-
-
+If you find a bug, or have a feature request, please [file an issue](https://github.com/googlemaps/react-native-navigation-sdk/issues) on GitHub. If you would like to get answers to technical questions from other Google Maps Platform developers, ask through one of our [developer community channels](https://developers.google.com/maps/developer-community). If you'd like to contribute, please check the [Contributing guide](https://github.com/googlemaps/react-native-navigation-sdk/blob/main/CONTRIBUTING.md).
