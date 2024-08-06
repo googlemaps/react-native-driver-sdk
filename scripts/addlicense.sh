@@ -12,22 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-pre-commit:
-  parallel: true
-  commands:
-    license-check:
-      run: ./scripts/addlicense.sh --check
-    lint:
-      glob: '*.{js,ts,jsx,tsx}'
-      run: npx eslint {staged_files}
-    types:
-      glob: '*.{js,ts, jsx, tsx}'
-      run: npx tsc --noEmit
-    #test:
-    #  run: npx jest --passWithNoTests
-commit-msg:
-  parallel: true
-  commands:
-    commitlint:
-      run: npx commitlint --edit
-rc: ~/.lefthookrc
+
+addlicense -f header_template.txt $@ \
+        --ignore "**/Pods/**" \
+        --ignore "**/node_modules/**" \
+        --ignore "**/android/**/build/**" \
+        --ignore "**/android/.gradle/**" \
+        --ignore "**/android/.idea/**" \
+        --ignore "**/ios/build/**" \
+        --ignore "example/vendor/**" \
+        --ignore "lib/**" \
+        --ignore "coverage/**" \
+        --ignore ".yarn/**" \
+        .

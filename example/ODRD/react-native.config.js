@@ -14,6 +14,13 @@
  * limitations under the License.
  */
 
+const path = require('path');
+const pak = require('../../package.json');
+
 module.exports = {
-  presets: ['module:@react-native/babel-preset'],
+  dependencies: {
+    [pak.name]: {
+      root: path.join(__dirname, '../..'),
+    },
+  },
 };

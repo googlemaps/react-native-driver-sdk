@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
-module.exports = {
-  presets: ['module:@react-native/babel-preset'],
-};
+import { Platform, requireNativeComponent } from 'react-native';
+
+let componentName = 'LMFSManager';
+
+if (Platform.OS === 'ios') componentName = 'RCTDelivery';
+
+export const LMFSManager = requireNativeComponent(componentName);
+export default LMFSManager;
