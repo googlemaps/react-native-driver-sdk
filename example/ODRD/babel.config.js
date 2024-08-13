@@ -23,8 +23,18 @@ module.exports = {
       {
         extensions: ['.tsx', '.ts', '.js', '.json'],
         alias: {
-          [pak.name]: path.join(__dirname, '..', pak.source),
+          [pak.name]: path.join(__dirname, '..', '..', pak.source),
         },
+      },
+    ],
+    [
+      'module:react-native-dotenv',
+      {
+        envName: 'APP_ENV',
+        path: '../.env',
+        allowlist: ['PROJECT_ID', 'ANDROID_HOST', 'IOS_HOST', 'ODRD_PORT'],
+        allowUndefined: false,
+        verbose: false,
       },
     ],
   ],

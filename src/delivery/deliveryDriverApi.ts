@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules } from 'react-native';
 import {
   DriverApi,
   type OnGetTokenCallback,
@@ -46,25 +46,13 @@ export class DeliveryDriverApi extends DriverApi {
   async initialize(
     providerId: string,
     vehicleId: string,
-    viewId: number,
     onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
   ) {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 
-    if (Platform.OS === 'ios') {
-      await this.nativeModule.createDeliveryDriverInstance(
-        providerId,
-        vehicleId,
-        viewId
-      );
-    } else {
-      await this.nativeModule.createDeliveryDriverInstance(
-        providerId,
-        vehicleId
-      );
-    }
+    await this.nativeModule.createDeliveryDriverInstance(providerId, vehicleId);
 
     await this.fetchAndSetToken();
 

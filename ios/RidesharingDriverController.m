@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-#import "RidesharingViewController.h"
+#import "RidesharingDriverController.h"
 #import "AuthTokenFactory.h"
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 
 @import UserNotifications;
 
-@implementation RidesharingViewController
+@implementation RidesharingDriverController
 GMTDVehicleReporter *_ridesharingVehicleReporter;
-GMSMapView *_driverView;
+GMSNavigationSession *_ridesharingSession;
 AuthTokenFactory *_tokenFactory;
 GMTDRidesharingDriverAPI *_rideSharingDriverAPI;
 GMTDDriverContext *_rideSharingDriverContext;
 DriverEventDispatcher *driverEventDispatch;
 
-// Retrieve the NavigationSDK fragment view
-- (void)initializeNavigator:(GMSMapView *)mapView {
-  _driverView = mapView;
+- (void)initializeWithSession:(GMSNavigationSession *)session {
+  _ridesharingSession = session;
 }
 
 - (void)createRidesharingInstance:(NSString *)providerId
@@ -41,7 +40,7 @@ DriverEventDispatcher *driverEventDispatch;
       initWithAccessTokenProvider:_tokenFactory
                        providerID:providerId
                         vehicleID:vehicleId
-                        navigator:_driverView.navigator];
+                        navigator:_ridesharingSession.navigator];
 
   _rideSharingDriverAPI = [[GMTDRidesharingDriverAPI alloc]
       initWithDriverContext:_rideSharingDriverContext];
@@ -49,7 +48,7 @@ DriverEventDispatcher *driverEventDispatch;
 
   _ridesharingVehicleReporter = _rideSharingDriverAPI.vehicleReporter;
   [_ridesharingVehicleReporter addListener:self];
-  [_driverView.roadSnappedLocationProvider
+  [_ridesharingSession.roadSnappedLocationProvider
       addListener:_ridesharingVehicleReporter];
 }
 
@@ -80,7 +79,7 @@ DriverEventDispatcher *driverEventDispatch;
 - (void)clearInstance {
   [_ridesharingVehicleReporter setLocationTrackingEnabled:NO];
   [_ridesharingVehicleReporter removeListener:self];
-  [_driverView.roadSnappedLocationProvider
+  [_ridesharingSession.roadSnappedLocationProvider
       removeListener:_ridesharingVehicleReporter];
   _ridesharingVehicleReporter = NULL;
   _rideSharingDriverAPI = NULL;
@@ -102,7 +101,7 @@ DriverEventDispatcher *driverEventDispatch;
 
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
   if (vehicleUpdate != nil) {
-    NSDictionary *dictionary = [RidesharingViewController
+    NSDictionary *dictionary = [RidesharingDriverController
         transformVehicleUpdateToDictionary:vehicleUpdate];
     eventBody[@"vehicleUpdate"] = dictionary;
   }
@@ -117,7 +116,7 @@ DriverEventDispatcher *driverEventDispatch;
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
 
   if (vehicleUpdate != nil) {
-    eventBody[@"vehicleUpdate"] = [RidesharingViewController
+    eventBody[@"vehicleUpdate"] = [RidesharingDriverController
         transformVehicleUpdateToDictionary:vehicleUpdate];
   }
 
@@ -141,7 +140,7 @@ DriverEventDispatcher *driverEventDispatch;
 }
 
 - (bool)isNavigatorInitialized {
-  return _driverView != nil;
+  return _ridesharingSession.navigator != nil;
 }
 
 - (bool)isDriverApiInitialized {
@@ -176,7 +175,7 @@ DriverEventDispatcher *driverEventDispatch;
     (GMSNavigationWaypoint *)waypoint {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"position"] = [RidesharingViewController
+  dictionary[@"position"] = [RidesharingDriverController
       transformCoordinateToDictionary: waypoint.coordinate];
   dictionary[@"preferredHeading"] = @(waypoint.preferredHeading);
   dictionary[@"vehicleStopover"] = @(waypoint.vehicleStopover);
@@ -222,7 +221,7 @@ DriverEventDispatcher *driverEventDispatch;
 
     for (int index = 0; index < vehicleUpdate.route.count; index++) {
       CLLocation *indexLocation = vehicleUpdate.route[index];
-      [routeArray addObject:[RidesharingViewController
+      [routeArray addObject:[RidesharingDriverController
                                 transformCLLocationToDictionary:indexLocation]];
     }
 

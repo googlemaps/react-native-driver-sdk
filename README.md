@@ -33,7 +33,7 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 ```groovy
 android {
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion 26
     }
 }
 ```

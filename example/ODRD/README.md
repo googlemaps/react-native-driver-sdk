@@ -7,10 +7,11 @@ This is a sample application that showcases developers how to integrate with the
 ## Prerequisites
 
 1. This library depends on the ODRD backend available in https://github.com/googlemaps/java-on-demand-rides-deliveries-stub-provider. Please make sure to set this up before proceeding.
+This package provides docker-compose files to run the backend services at `/example/tools/backend` folder. For more information, please refer to the [README](../tools/backend/README.md) file in the tools/backend folder of the example app.
 
 1. Once the backend is setup, create a vehicle and keep the vehicleId handy. To create a vehicle, you can trigger POST request with the desired fields. Example:
 
-```URL: http://localhost:8080/vehicle/new
+```URL: http://localhost:8092/vehicle/new
     
     Body:
 

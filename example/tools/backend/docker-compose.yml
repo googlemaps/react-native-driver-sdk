@@ -25,11 +25,11 @@ services:
         CONSUMER_SERVICE_ACCOUNT_EMAIL: ${CONSUMER_SERVICE_ACCOUNT_EMAIL}
         FLEET_READER_SERVICE_ACCOUNT_EMAIL: ${FLEET_READER_SERVICE_ACCOUNT_EMAIL}
         JS_API_KEY: ${JS_API_KEY}
-        HOST: http://localhost:8091
+        HOST: http://localhost:${LMFS_PORT}
         GIT_HASH: dff5045208bb687337ca2e27e2060ff0b2c7826e
     command: ["./gradlew", "appengineRun", "--stacktrace"]
     ports:
-      - "8091:8080"
+      - ${LMFS_PORT}:8080
     volumes:
       - ${GCLOUD_CONFIG_DIR}:/root/.config/gcloud
 
@@ -45,7 +45,7 @@ services:
         GIT_HASH: 9ae34af34a0abc51e1139ce2a4fc7e0d30f368b2
     command: ["./gradlew", "appengineRun", "--stacktrace"]
     ports:
-      - "8092:8080"
+      - ${ODRD_PORT}:8080
     volumes:
       - ${GCLOUD_CONFIG_DIR}:/root/.config/gcloud
 

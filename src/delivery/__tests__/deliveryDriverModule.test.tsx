@@ -24,7 +24,6 @@ describe('LMFS', () => {
       deliveryDriver.initialize(
         'mobility-partner-lmfs',
         'vehicle_3_1689729828602',
-        123,
         () => Promise.resolve(''),
         () => {}
       )

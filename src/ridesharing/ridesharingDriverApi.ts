@@ -42,22 +42,13 @@ export class RidesharingDriverApi extends DriverApi {
   async initialize(
     providerId: string,
     vehicleId: string,
-    viewId: number,
     onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
   ) {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 
-    if (Platform.OS === 'ios') {
-      await this.nativeModule.createRidesharingInstance(
-        providerId,
-        vehicleId,
-        viewId
-      );
-    } else {
-      await this.nativeModule.createRidesharingInstance(providerId, vehicleId);
-    }
+    await this.nativeModule.createRidesharingInstance(providerId, vehicleId);
 
     await this.fetchAndSetToken();
 

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable require-jsdoc */
 /**
  * Copyright 2024 Google LLC
@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -26,8 +26,9 @@ import {
   Switch,
   Dimensions,
   Platform,
+  findNodeHandle,
 } from 'react-native';
-import { RidesharingDriverApi, VehicleState } from 'react-native-driver-sdk';
+
 import {
   type NavigationViewController,
   type ArrivalEvent,
@@ -35,19 +36,44 @@ import {
   TravelMode,
   RouteStatus,
   type MapViewCallbacks,
-  type NavigationViewCallbacks,
   NavigationView,
-} from 'react-native-navigation-sdk/src';
+  useNavigation,
+  type NavigationCallbacks,
+  NavigationInitErrorCode,
+  NavigationProvider,
+  type TermsAndConditionsDialogOptions,
+} from 'react-native-navigation-sdk';
+import { RidesharingDriverApi, VehicleState } from 'react-native-driver-sdk';
+import {
+  PROJECT_ID as PROVIDER_ID,
+  ANDROID_HOST,
+  IOS_HOST,
+  ODRD_PORT,
+} from '@env';
+import usePermissions from './checkPermissions';
 
+// Update `/example/.env` to change HOSTs AND PORTs.
 const BASE_URL =
-  Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+  Platform.OS === 'android'
+    ? `http://${ANDROID_HOST}:${ODRD_PORT}`
+    : `http://${IOS_HOST}:${ODRD_PORT}`;
+
 const VEHICLE_ID = 'Vehicle1';
-const PROVIDER_ID = 'cabrio-1501793433270';
+
+const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
+  title: 'RN LMFS Sample',
+  companyName: 'Sample Company',
+  showOnlyDisclaimer: true,
+};
+
 const ridesharingDriverApi = new RidesharingDriverApi();
 
-function App(): JSX.Element {
+function ODRDSampleApp(): JSX.Element {
+  const { arePermissionsApproved } = usePermissions();
   const [navigationViewController, setNavigationViewController] =
     useState<NavigationViewController | null>(null);
+  const { navigationController, addListeners, removeListeners } =
+    useNavigation();
 
   const [shouldShowControls, setShouldShowControls] = useState(false);
   const [isAbnormalTerminationEnabled, setIsAbnormalTerminationEnabled] =
@@ -56,19 +82,92 @@ function App(): JSX.Element {
   const [isLocationTrackingEnabled, setIsLocationTrackingEnabled] =
     useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
-  const [navigationViewId, setNavigationViewId] = useState<number | null>(null);
 
   const clearInstance = useCallback(async () => {
     await ridesharingDriverApi.clearInstance();
   }, []);
 
+  const onNavigationReady = useCallback(() => {
+    console.log('onNavigationReady');
+  }, []);
+
+  const onNavigationInitError = useCallback(
+    (errorCode: NavigationInitErrorCode) => {
+      console.log(`Failed to initialize navigation errorCode: ${errorCode}`);
+    },
+    []
+  );
+
+  const onArrival = useCallback(
+    (arrival: ArrivalEvent) => {
+      if (arrival.isFinalDestination) {
+        console.log('ODRD Final destination reached');
+        navigationController?.stopGuidance();
+        navigationController?.clearDestinations();
+      } else {
+        console.log('ODRD Continuing to the next destination');
+        navigationController?.continueToNextDestination();
+      }
+
+      console.log('ODRD arrived');
+    },
+    [navigationController]
+  );
+
+  const onRouteStatusResult = useCallback(
+    (routeStatus: RouteStatus) => {
+      switch (routeStatus) {
+        case RouteStatus.OK:
+          navigationController?.startGuidance();
+
+          navigationController?.simulator.simulateLocationsAlongExistingRoute({
+            speedMultiplier: 2,
+          });
+          break;
+        case RouteStatus.ROUTE_CANCELED:
+          console.log('ROUTE_CANCELED');
+          break;
+        case RouteStatus.NO_ROUTE_FOUND:
+          console.log('NO_ROUTE_FOUND');
+          break;
+        case RouteStatus.NETWORK_ERROR:
+          console.log('NETWORK_ERROR');
+          break;
+        case RouteStatus.LOCATION_DISABLED:
+          console.log('LOCATION_DISABLED');
+          break;
+        case RouteStatus.LOCATION_UNKNOWN:
+          console.log('LOCATION_UNKNOWN');
+          break;
+        default:
+          console.log(routeStatus);
+          onStartingGuidanceError();
+      }
+    },
+    [navigationController]
+  );
+
+  const navigationCallbacks: NavigationCallbacks = useMemo(
+    () => ({
+      onArrival,
+      onNavigationReady,
+      onNavigationInitError,
+      onRouteStatusResult,
+    }),
+    [onArrival, onNavigationReady, onNavigationInitError, onRouteStatusResult]
+  );
+
   useEffect(() => {
+    console.log('Init LMFS Example app');
+    removeListeners(navigationCallbacks);
+    addListeners(navigationCallbacks);
     fetchAuthToken();
 
     return () => {
+      removeListeners(navigationCallbacks);
       clearInstance();
     };
-  }, [clearInstance]);
+  }, [clearInstance, navigationCallbacks, addListeners, removeListeners]);
 
   const height =
     Dimensions.get('window').height - 0.1 * Dimensions.get('window').height;
@@ -76,13 +175,13 @@ function App(): JSX.Element {
 
   const fetchAuthToken = async () => {
     try {
-      console.log('getToken');
-      const tokenUrl = BASE_URL + '/token/driver/' + VEHICLE_ID;
+      console.log('Fetching auth token...');
+      const tokenUrl = BASE_URL + '/token/delivery_driver/' + VEHICLE_ID;
       const response = await fetch(tokenUrl);
-      const token = await response.json();
+      const { token } = await response.json();
+      console.log('Got token:', token);
 
-      setAuthToken(token.jwt);
-      console.log('AuthToken: ', token.jwt);
+      setAuthToken(token);
     } catch (error) {
       console.log(
         'There has been a problem connecting to the provider, please make sure it is running. ',
@@ -93,13 +192,12 @@ function App(): JSX.Element {
 
   const createInstance = async () => {
     try {
+      console.log('Creating ODRD instance');
       await ridesharingDriverApi.initialize(
         PROVIDER_ID,
         VEHICLE_ID,
-        navigationViewId || 0,
         _tokenContext => {
           console.log('onGetToken call');
-          console.log(authToken);
           // Check if the token is expired, in such case request a new one.
           return Promise.resolve(authToken || '');
         },
@@ -118,23 +216,9 @@ function App(): JSX.Element {
           console.log('onVehicleUpdateFailed: ', error);
         },
       });
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.log('createInstance ', error);
     }
-  };
-
-  const onArrival = (arrival: ArrivalEvent) => {
-    /* FIXME:
-    if (arrival.isFinalDestination) {
-      console.log('odrd Final destination reached');
-      navigationViewController?.stopGuidance();
-      navigationViewController?.clearDestinations();
-    } else {
-      console.log('odrd Continuing to the next destination');
-      navigationViewController?.continueToNextDestination();
-    }
-    */
-    console.log('odrd arrived');
   };
 
   const onGetDriverSDKVersionClick = async () => {
@@ -160,8 +244,13 @@ function App(): JSX.Element {
     setShouldShowControls(false);
   };
 
-  const onMapReady = () => {
-    console.log('onMapReady');
+  const onMapReady = async () => {
+    console.log('Map is ready, initializing navigator...');
+    try {
+      await navigationController.init();
+    } catch (error) {
+      console.error('Error initializing navigator', error);
+    }
   };
 
   const runNavigation = () => {
@@ -179,73 +268,29 @@ function App(): JSX.Element {
       avoidTolls: false,
     };
 
-    /* FIXME:
-    navigationViewController?.setDestinations(
+    navigationController?.setDestinations(
       [firstWaypoint, secondWaypoint],
       routingOptions
     );
-    */
   };
 
   const onStartingGuidanceError = () => {
     console.log('Error: Starting Guidance Error');
   };
 
-  const onRouteStatusResult = (routeStatus: RouteStatus) => {
-    switch (routeStatus) {
-      case RouteStatus.OK:
-        /* FIXME:
-        navigationViewController?.startGuidance();
-
-        navigationViewController?.simulator.simulateLocationsAlongExistingRoute(
-          {
-            speedMultiplier: 2,
-          }
-        );
-        */
-        break;
-      case RouteStatus.ROUTE_CANCELED:
-        console.log('ROUTE_CANCELED');
-        break;
-      case RouteStatus.NO_ROUTE_FOUND:
-        console.log('NO_ROUTE_FOUND');
-        break;
-      case RouteStatus.NETWORK_ERROR:
-        console.log('NETWORK_ERROR');
-        break;
-      case RouteStatus.LOCATION_DISABLED:
-        console.log('LOCATION_DISABLED');
-        break;
-      case RouteStatus.LOCATION_UNKNOWN:
-        console.log('LOCATION_UNKNOWN');
-        break;
-      default:
-        onStartingGuidanceError();
-    }
-  };
-
   const mapViewCallbacks: MapViewCallbacks = {
     onMapReady,
-  };
-
-  const navigationViewCallbacks: NavigationViewCallbacks = {
-    /* FIXME 
-    onArrival,
-    onRouteStatusResult, 
-    */
   };
 
   const toggleLocationTrackingEnabled = () => {
     const updatedValue = !isLocationTrackingEnabled;
     setIsLocationTrackingEnabled(updatedValue);
 
-    /* FIXME:
     if (updatedValue) {
-      navigationViewController?.startUpdatingLocation();
+      navigationController?.startUpdatingLocation();
     } else {
-      navigationViewController?.stopUpdatingLocation();
+      navigationController?.stopUpdatingLocation();
     }
-    */
 
     ridesharingDriverApi
       .getRidesharingVehicleReporter()
@@ -270,7 +315,11 @@ function App(): JSX.Element {
     ridesharingDriverApi.setAbnormalTerminationReportingEnabled(updatedValue);
   };
 
-  return (
+  return !arePermissionsApproved ? (
+    <View style={[styles.container]}>
+      <Text>Permissions not accepted</Text>
+    </View>
+  ) : (
     <View
       style={[
         styles.container,
@@ -284,7 +333,6 @@ function App(): JSX.Element {
           <NavigationView
             width={width}
             height={height}
-            navigationViewCallbacks={navigationViewCallbacks}
             mapViewCallbacks={mapViewCallbacks}
             onNavigationViewControllerCreated={setNavigationViewController}
             onMapViewControllerCreated={() => {}}
@@ -297,12 +345,6 @@ function App(): JSX.Element {
               navigationHeaderPrimaryBackgroundColor: '#34eba8',
               navigationHeaderDistanceValueTextColor: '#76b5c5',
             }}
-
-            /* FIXME:
-            ref={element => {
-              setNavigationViewId(findNodeHandle(element) || 0);
-            }}
-            */
           />
         </View>
       </View>
@@ -355,6 +397,16 @@ function App(): JSX.Element {
         />
       </View>
     </View>
+  );
+}
+
+function App(): JSX.Element {
+  return (
+    <NavigationProvider
+      termsAndConditionsDialogOptions={termsAndConditionsDialogOptions}
+    >
+      <ODRDSampleApp />
+    </NavigationProvider>
   );
 }
 

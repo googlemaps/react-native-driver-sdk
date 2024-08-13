@@ -47,15 +47,18 @@
     "registry": "https://wombat-dressing-room.appspot.com"
   },
   "scripts": {
-    "example:lmfs": "yarn workspace react-native-navigation-sdk-lmfs-sample",
-    "example:odrd": "yarn workspace react-native-navigation-sdk-odrd-sample",
+    "example:lmfs": "yarn workspace react-native-driver-sdk-lmfs-sample",
+    "example:odrd": "yarn workspace react-native-driver-sdk-odrd-sample",
     "test": "jest --passWithNoTests",
     "test:types": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "bootstrap": "yarn install && yarn workspace react-native-navigation-sdk-lmfs-sample pods && yarn workspace react-native-navigation-sdk-odrd-sample pods",
+    "bootstrap": "yarn install && yarn workspace react-native-driver-sdk-lmfs-sample pods && yarn workspace react-native-driver-sdk-odrd-sample pods",
     "clean": "del-cli example/LMFS/android/build example/LMFS/android/app/build example/LMFS/ios/build example/ODRD/android/build example/ODRD/android/app/build example/ODRD/ios/build lib",
     "prepare": "bob build",
     "build": "bob build"
+  },
+  "dependencies": {
+    "react-native-navigation-sdk": "github:googlemaps/react-native-navigation-sdk#v0.4.2"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",
@@ -76,7 +79,6 @@
     "react": "18.2.0",
     "react-native": "0.74.1",
     "react-native-builder-bob": "^0.29.0",
-    "react-native-navigation-sdk": "github:googlemaps/react-native-navigation-sdk",
     "react-test-renderer": "18.2.0",
     "turbo": "^1.10.7",
     "typescript": ">=4.3.5 <5.4.0"
@@ -86,7 +88,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-navigation-sdk": ">=0.4.2"
   },
   "workspaces": [
     "example/LMFS",
@@ -101,7 +104,8 @@
       "<rootDir>/lib/"
     ],
     "moduleNameMapper": {
-      "^react-native$": "<rootDir>/node_modules/react-native"
+      "^react-native$": "<rootDir>/node_modules/react-native",
+      "^react-native-navigation-sdk$": "<rootDir>/node_modules/react-native-navigation-sdk"
     }
   },
   "commitlint": {

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#import "DeliveryViewController.h"
+#import "DeliveryDriverController.h"
 #import "AuthTokenFactory.h"
 #import "JsErrorsConstants.h"
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 
-@implementation DeliveryViewController
+@implementation DeliveryDriverController
 GMTDVehicleReporter *_vehicleReporter;
-GMSMapView *_lmfsDriverView;
+GMSNavigationSession *_deliverySession;
 AuthTokenFactory *_lmfsTokenFactory;
 GMTDDriverContext *_driverContext;
 GMTDDeliveryDriverAPI *_driverAPI;
@@ -32,9 +32,8 @@ DriverEventDispatcher *lmfsEventDispatch;
   // Do any additional setup after loading the view.
 }
 
-// Retrieve the NavigationSDK fragment view
-- (void)initializeNavigator:(GMSMapView *)mapView {
-  _lmfsDriverView = mapView;
+- (void)initializeWithSession:(GMSNavigationSession *)session {
+    _deliverySession = session;
 }
 
 - (void)createDeliveryDriverInstance:(NSString *)providerId
@@ -45,13 +44,13 @@ DriverEventDispatcher *lmfsEventDispatch;
       initWithAccessTokenProvider:_lmfsTokenFactory
                        providerID:providerId
                         vehicleID:vehicleId
-                        navigator:_lmfsDriverView.navigator];
+                        navigator:_deliverySession.navigator];
   _driverAPI =
       [[GMTDDeliveryDriverAPI alloc] initWithDriverContext:driverContext];
 
   _vehicleReporter = _driverAPI.vehicleReporter;
   [_vehicleReporter addListener:self];
-  [_lmfsDriverView.roadSnappedLocationProvider addListener:_vehicleReporter];
+  [_deliverySession.roadSnappedLocationProvider addListener:_vehicleReporter];
 
   lmfsEventDispatch = [DriverEventDispatcher allocWithZone:nil];
 }
@@ -83,7 +82,7 @@ DriverEventDispatcher *lmfsEventDispatch;
 - (void)clearInstance {
   [_vehicleReporter setLocationTrackingEnabled:NO];
   [_vehicleReporter removeListener:self];
-  [_lmfsDriverView.roadSnappedLocationProvider removeListener:_vehicleReporter];
+  [_deliverySession.roadSnappedLocationProvider removeListener:_vehicleReporter];
   _vehicleReporter = NULL;
   _driverAPI = NULL;
 }
@@ -109,7 +108,7 @@ DriverEventDispatcher *lmfsEventDispatch;
       NSMutableDictionary *vehicleStop = [[NSMutableDictionary alloc] init];
 
       if (vehicle.vehicleStops[i].plannedWaypoint != nil) {
-        vehicleStop[@"waypoint"] = [DeliveryViewController
+        vehicleStop[@"waypoint"] = [DeliveryDriverController
             transformNavigationWaypointToDictionary:vehicle.vehicleStops[i]
                                                         .plannedWaypoint];
       }
@@ -168,7 +167,7 @@ DriverEventDispatcher *lmfsEventDispatch;
 
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
   eventBody[@"vehicleUpdate"] =
-      [DeliveryViewController transformVehicleUpdateToDictionary:vehicleUpdate];
+      [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
 
   [lmfsEventDispatch sendEventName:@"didSucceedVehicleUpdate" body:eventBody];
 }
@@ -179,7 +178,7 @@ DriverEventDispatcher *lmfsEventDispatch;
                withError:(NSError *)error {
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
   eventBody[@"vehicleUpdate"] =
-      [DeliveryViewController transformVehicleUpdateToDictionary:vehicleUpdate];
+      [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
 
   if (error != nil) {
     eventBody[@"error"] = @{
@@ -201,7 +200,7 @@ DriverEventDispatcher *lmfsEventDispatch;
 }
 
 - (bool)isNavigatorInitialized {
-  return _lmfsDriverView != nil;
+  return _deliverySession.navigator != nil;
 }
 
 - (bool)isDriverApiInitialized {
@@ -236,7 +235,7 @@ DriverEventDispatcher *lmfsEventDispatch;
     (GMSNavigationWaypoint *)waypoint {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"position"] = [DeliveryViewController
+  dictionary[@"position"] = [DeliveryDriverController
       transformCoordinateToDictionary:waypoint.coordinate];
   dictionary[@"preferredHeading"] = @(waypoint.preferredHeading);
   dictionary[@"vehicleStopover"] = @(waypoint.vehicleStopover);
@@ -282,7 +281,7 @@ DriverEventDispatcher *lmfsEventDispatch;
 
     for (int index = 0; index < vehicleUpdate.route.count; index++) {
       CLLocation *indexLocation = vehicleUpdate.route[index];
-      [routeArray addObject:[DeliveryViewController
+      [routeArray addObject:[DeliveryDriverController
                                 transformCLLocationToDictionary:indexLocation]];
     }
 

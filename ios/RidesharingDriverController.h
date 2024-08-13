@@ -16,26 +16,28 @@
 
 #import <UIKit/UIKit.h>
 @import GoogleNavigation;
-#import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 #import "DriverEventDispatcher.h"
+#import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DeliveryViewController : UIViewController<GMTDVehicleReporterListener>
-@property GMTDVehicleReporter *vehicleReporter;
+@interface RidesharingDriverController
+    : UIViewController <GMTDVehicleReporterListener>
 
-- (void)initializeNavigator: (GMSMapView *) mapView;
-- (void)createDeliveryDriverInstance: (NSString *) providerId
-                           vehicleId: (NSString *) vehicleId;
-- (void)setLocationTrackingEnabled: (BOOL) isEnabled;
-- (void)setLocationReportingInterval: (double) interval;
+@property GMTDVehicleReporter *vReporter;
+
+// Retrieve the NavigationSDK navigation session
+- (void)initializeWithSession:(GMSNavigationSession *)session;
+- (void)createRidesharingInstance:(NSString *)providerId
+                        vehicleId:(NSString *)vehicleId;
+- (void)setLocationTrackingEnabled:(BOOL)isEnabled;
+- (void)setVehicleState:(BOOL)isOnline;
+- (void)setLocationReportingInterval:(double)interval;
 + (NSString *)getDriverSdkVersion;
-+ (NSString *)getDeliveryDriverSDKLongVersion;
++ (NSString *)getRidesharingDriverSDKLongVersion;
 - (void)clearInstance;
-+ (void)setAbnormalTerminationReporting: (BOOL) isEnabled;
-- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject;
-- (void)setAuthToken: (NSString *) authToken;
++ (void)setAbnormalTerminationReporting:(BOOL)isEnabled;
+- (void)setAuthToken:(NSString *)authToken;
 - (void)addListener:(NSString *)eventName;
 - (void)removeListeners:(NSString *)eventName;
 - (bool)isNavigatorInitialized;

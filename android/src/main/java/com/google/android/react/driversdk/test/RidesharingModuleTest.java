@@ -155,10 +155,10 @@ public class RidesharingModuleTest {
   @Test
   public void updateStatus() {
     try {
-      DriverContext.StatusListener.StatusLevel statusLevel =
-          DriverContext.StatusListener.StatusLevel.INFO;
-      DriverContext.StatusListener.StatusCode statusCode =
-          DriverContext.StatusListener.StatusCode.DEFAULT;
+      DriverContext.DriverStatusListener.StatusLevel statusLevel =
+          DriverContext.DriverStatusListener.StatusLevel.INFO;
+      DriverContext.DriverStatusListener.StatusCode statusCode =
+          DriverContext.DriverStatusListener.StatusCode.DEFAULT;
       String statusMsg = "";
       rsm.updateStatus(statusLevel, statusCode, statusMsg);
     } catch (Exception e) {
@@ -268,7 +268,7 @@ public class RidesharingModuleTest {
         new Runnable() {
           @Override
           public void run() {
-            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("3.1.1"));
+            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("5.0.0"));
           }
         });
     try {

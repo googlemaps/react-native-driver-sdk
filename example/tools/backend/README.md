@@ -29,7 +29,7 @@ These are sample backends that should not be used for production purposes, but a
     ```
 2. Create a .env File
    
-    Copy the `.env.sample` file to a new file named `.env` and edit the file contents to include your specific environment variables.
+    Copy the `/example/.env.sample` file to a new file named `/example/.env` and edit the file contents to include your specific environment variables.
 
     This file should never be committed to version control.
 
@@ -62,7 +62,7 @@ These are sample backends that should not be used for production purposes, but a
 With everything set up, you can now run the backend service Docker containers using the following commands:
 
 ```bash
-docker compose up
+docker compose --env-file ../../.env up
 ```
 This will start the services defined in docker-compose.yml, including the `LMFS` and `ODRD` backends.
 
@@ -75,20 +75,20 @@ It is also possible to run individual backend services if there is no need to ru
 To run only the `LMFS` backend, use the following command:
 
 ```bash
-docker compose up lmfs-backend
+docker compose --env-file ../../.env up lmfs-backend
 ```
 
 To run only the `ODRD` backend, use the following command:
 
 ```bash
-docker compose up odrd-backend
+docker compose --env-file ../../.env up odrd-backend
 ```
 
 ### Run FleetEngine Auth sample app
 
 docker-compose file also describes a service for running the FleetEngine Auth sample app. As this application has command-line interface, it should be runned with following `docker compose run` command:
 ```bash
-docker compose run fleetengine-auth
+docker compose --env-file ../../.env run fleetengine-auth
 ```
 
 ## Updating the .env file
@@ -96,5 +96,5 @@ docker compose run fleetengine-auth
 If there is a need to update the `.env` file, the services need to be rebuilt for the changes to take effect. This can be done by running the following command:
 
 ```bash
-docker compose build [--no-cache]
+docker compose --env-file ../../.env build [--no-cache]
 ```

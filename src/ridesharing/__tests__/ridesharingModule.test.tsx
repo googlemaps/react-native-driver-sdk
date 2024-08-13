@@ -25,7 +25,6 @@ describe('ODRD', () => {
       ridesharing.initialize(
         'mobility-partner-lmfs',
         'vehicleId',
-        123,
         () => Promise.resolve(''),
         () => {}
       )

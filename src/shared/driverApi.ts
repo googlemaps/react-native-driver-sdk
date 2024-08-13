@@ -50,7 +50,6 @@ export abstract class DriverApi {
   abstract initialize(
     providerId: string,
     vehicleId: string,
-    viewId: number,
     onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
   ): Promise<void>;

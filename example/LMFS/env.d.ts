@@ -1,11 +1,11 @@
 /**
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
-#import "RidesharingDriverController.h"
-#import "JsErrorsConstants.h"
-NS_ASSUME_NONNULL_BEGIN
-
-@interface RCTRideSharingModule : NSObject <RCTBridgeModule>
-@property RidesharingDriverController *driverController;
-
-@end
-
-NS_ASSUME_NONNULL_END
+declare module '@env' {
+  export const PROJECT_ID: string;
+  export const ANDROID_HOST: string;
+  export const IOS_HOST: string;
+  export const LMFS_PORT: number;
+}

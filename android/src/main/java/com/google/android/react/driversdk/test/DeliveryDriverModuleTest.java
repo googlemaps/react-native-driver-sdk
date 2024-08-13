@@ -171,10 +171,10 @@ public class DeliveryDriverModuleTest {
   @Test
   public void updateStatus() {
     try {
-      DriverContext.StatusListener.StatusLevel statusLevel =
-          DriverContext.StatusListener.StatusLevel.INFO;
-      DriverContext.StatusListener.StatusCode statusCode =
-          DriverContext.StatusListener.StatusCode.DEFAULT;
+      DriverContext.DriverStatusListener.StatusLevel statusLevel =
+          DriverContext.DriverStatusListener.StatusLevel.INFO;
+      DriverContext.DriverStatusListener.StatusCode statusCode =
+          DriverContext.DriverStatusListener.StatusCode.DEFAULT;
       String statusMsg = "";
 
       ddm.updateStatus(statusLevel, statusCode, statusMsg);
@@ -285,7 +285,7 @@ public class DeliveryDriverModuleTest {
         new Runnable() {
           @Override
           public void run() {
-            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("3.1.1"));
+            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("5.0.0"));
           }
         });
     try {
