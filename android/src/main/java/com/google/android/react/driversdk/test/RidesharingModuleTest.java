@@ -268,7 +268,7 @@ public class RidesharingModuleTest {
         new Runnable() {
           @Override
           public void run() {
-            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("5.0.0"));
+            future.complete(RidesharingDriverApi.getDriverSdkVersion().equals("3.3.0"));
           }
         });
     try {

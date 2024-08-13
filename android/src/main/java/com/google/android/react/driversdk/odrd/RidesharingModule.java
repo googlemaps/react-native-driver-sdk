@@ -79,10 +79,9 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
         UiThreadUtil.runOnUiThread(
                 () -> {
 
-                    Navigator navigator =
-                            NavModule.getInstance().getNavigator();
+                    mNavigator = NavModule.getInstance().getNavigator();
 
-                    if (navigator == null) {
+                    if (mNavigator == null) {
                         promise.reject(
                                 JsErrors.NO_NAVIGATOR_CODE,
                                 JsErrors.NO_NAVIGATOR_MESSAGE);

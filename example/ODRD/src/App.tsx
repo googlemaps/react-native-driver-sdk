@@ -58,10 +58,11 @@ const BASE_URL =
     ? `http://${ANDROID_HOST}:${ODRD_PORT}`
     : `http://${IOS_HOST}:${ODRD_PORT}`;
 
-const VEHICLE_ID = 'Vehicle1';
+// Update this with according your configuration sent to the backend/provider.
+const VEHICLE_ID = 'ADD_VEHICLE_ID_HERE';
 
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
-  title: 'RN LMFS Sample',
+  title: 'RN ODRD Sample',
   companyName: 'Sample Company',
   showOnlyDisclaimer: true,
 };
@@ -158,7 +159,7 @@ function ODRDSampleApp(): JSX.Element {
   );
 
   useEffect(() => {
-    console.log('Init LMFS Example app');
+    console.log('Init ODRD Example app');
     removeListeners(navigationCallbacks);
     addListeners(navigationCallbacks);
     fetchAuthToken();
@@ -176,12 +177,12 @@ function ODRDSampleApp(): JSX.Element {
   const fetchAuthToken = async () => {
     try {
       console.log('Fetching auth token...');
-      const tokenUrl = BASE_URL + '/token/delivery_driver/' + VEHICLE_ID;
+      const tokenUrl = BASE_URL + '/token/driver/' + VEHICLE_ID;
       const response = await fetch(tokenUrl);
-      const { token } = await response.json();
+      const token = await response.json();
       console.log('Got token:', token);
 
-      setAuthToken(token);
+      setAuthToken(token.jwt);
     } catch (error) {
       console.log(
         'There has been a problem connecting to the provider, please make sure it is running. ',

@@ -58,7 +58,8 @@ const BASE_URL =
     ? `http://${ANDROID_HOST}:${LMFS_PORT}`
     : `http://${IOS_HOST}:${LMFS_PORT}`;
 
-const VEHICLE_ID = 'Vehicle1';
+// Update this vehicle id from the response from the /upload-delivery-config.html backend endpoint.
+const VEHICLE_ID = 'ADD_VEHICLE_ID_HERE';
 
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
   title: 'RN LMFS Sample',
