@@ -9,18 +9,18 @@ This is a sample application that show cases developers how to integrate with th
 1. This library depends on the LMFS backend available in https://github.com/googlemaps/last-mile-fleet-solution-samples/tree/main/backend.
 This package provides docker-compose files to run the backend services at `/example/tools/backend` folder. For more information, please refer to the [README](../tools/backend/README.md) file in the tools/backend folder of the example app.
 
-1. Once the backend is setup, create a delivery vehicle and keep the vehicleId handy. In order to make it easier to create vehicles with tasks, you can use the `/upload-delivery-config.html` endpoint on the backend.
-1. Go to the [App.tsx](/example/LMFS/App.tsx) file and update the BASE_URL, PROVIDER_ID, and VEHICLE_ID according to your configuration.
+1. Once the backend is setup, create a delivery vehicle and keep the vehicleId handy. In order to make it easier to create vehicles with tasks, you can use the `/upload-delivery-config.html` endpoint on the backend. [example json](https://raw.githubusercontent.com/googlemaps/last-mile-fleet-solution-samples/main/backend/src/test/resources/test.json)
+2. Go to the [App.tsx](/example/LMFS/App.tsx) file and update the VEHICLE_ID from the endpoint response.
 
 ## How to run application
 
-1. Run `npm i` from the current directory.
+1. Run `yarn install` from the current directory.
 
 1. Go to the [ios](./ios) folder and run `pod install`.
 
 1. Come back to the current directory.
 
-1. Then you can use `npx react-native run-android` or `npx react-native run-ios` depending the platform.
+1. Then you can use `yarn run react-native run-android` or `yarn run react-native run-ios` depending the platform.
 
 ## Debugging Fleet engine logs
 

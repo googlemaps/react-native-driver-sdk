@@ -24,7 +24,13 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 
 1. To install the library run the following command from your project root: 
 
-`npm install --save https://github.com/googlemaps/react-native-driver-sdk#{version_tag}`
+    ```bash
+    npm install --save https://github.com/googlemaps/react-native-driver-sdk#{version_tag}
+    ```
+    or
+    ```bash
+    yarn add https://github.com/googlemaps/react-native-driver-sdk#{version_tag}
+    ```
 
 ### Android
 
@@ -49,33 +55,32 @@ android {
 ### Ridesharing
 #### Initializing the API
 
-1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/SampleApp) for all details on how to set up the navigation component.
+1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/example) for all details on how to set up the navigation component.
 
 1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
-```typescript
-        import RidesharingDriverapi from "react-native-driver-sdk/components/ridesharing/RidesharingDriverApi";
+    ```typescript
+            import RidesharingDriverApi from "react-native-driver-sdk";
 
-        const ridesharing = new RidesharingDriverapi();
-```
+            const ridesharing = new RidesharingDriverapi();
+    ```
 
-1. Second step is to initialize the Api. Make sure to capture the viewId associated to the `NavigationView` component prior to this as it's needed.
+2. Second step is to initialize the Api.
 
-```typescript
-    await ridesharingDriverApi
-        .initialize(
-          PROVIDER_ID,
-          VEHICLE_ID,
-          navigationViewId,
-          (tokenContext) => {
-            // Check if the token is expired, in such case request a new one.
-            return Promise.resolve(authToken || "");
-          },
-          (statusLevel, statusCode, message) => {
-            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
-          }
-        );
-```
+    ```typescript
+        await ridesharingDriverApi
+            .initialize(
+              PROVIDER_ID,
+              VEHICLE_ID,
+              (tokenContext) => {
+                // Check if the token is expired, in such case request a new one.
+                return Promise.resolve(authToken || "");
+              },
+              (statusLevel, statusCode, message) => {
+                console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+              }
+            );
+    ```
 
 Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
 
@@ -97,29 +102,28 @@ The vehicle reporter allows developers to enable/disable location reporting to F
 
 1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
-```typescript
-        import DeliveryDriverapi from "react-native-driver-sdk/components/delivery/DeliveryDriverapi";
+    ```typescript
+            import DeliveryDriverApi from "react-native-driver-sdk";
 
-        const deliveryApi = new DeliveryDriverapi();
-```
+            const deliveryApi = new DeliveryDriverapi();
+    ```
 
-1. Second step is to initialize the Api. Make sure to capture the viewId associated to the `NavigationView` component prior to this as it's needed.
+2. Second step is to initialize the Api.
 
-```typescript
-    await deliveryApi
-        .initialize(
-          PROVIDER_ID,
-          DELIVERY_VEHICLE_ID,
-          navigationViewId,
-          (tokenContext) => {
-            // Check if the token is expired, in such case request a new one.
-            return Promise.resolve(authToken || "");
-          },
-          (statusLevel, statusCode, message) => {
-            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
-          }
-        );
-```
+    ```typescript
+        await deliveryApi
+            .initialize(
+              PROVIDER_ID,
+              DELIVERY_VEHICLE_ID,
+              (tokenContext) => {
+                // Check if the token is expired, in such case request a new one.
+                return Promise.resolve(authToken || "");
+              },
+              (statusLevel, statusCode, message) => {
+                console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+              }
+            );
+    ```
 
 Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
 

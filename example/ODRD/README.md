@@ -23,17 +23,29 @@ This package provides docker-compose files to run the backend services at `/exam
         }
 ```
 
-1. Go to the [App.tsx](/example/ODRD/App.tsx) file and update the BASE_URL, PROVIDER_ID, and VEHICLE_ID according to your configuration. 
+Curl command:
+```bash
+curl -X POST http://localhost:8092/vehicle/new \
+-H "Content-Type: application/json" \
+-d '{
+  "vehicleId": "vehicle_3342",
+  "supportedTripTypes": ["EXCLUSIVE"],
+  "backToBackEnabled": false,
+  "maximumCapacity": 4
+}'
+```
+
+1. Go to the [App.tsx](/example/ODRD/App.tsx) file and update the VEHICLE_ID according to your configuration. 
 
 ## How to run application
 
-1. Run `npm i` from the current directory.
+1. Run `yarn install` from the current directory.
 
 1. Go to the [ios](./ios) folder and run `pod install`.
 
 1. Come back to the current directory.
 
-1. Then you can use `npx react-native run-android` or `npx react-native run-ios` depending the platform.
+1. Then you can use `yarn run react-native run-android` or `yarn run react-native run-ios` depending the platform.
 
 ## Debugging Fleet engine logs
 
