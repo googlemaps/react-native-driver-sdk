@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { type Waypoint } from 'react-native-navigation-sdk';
-import { type Location } from 'react-native-navigation-sdk';
+import type {
+  Location,
+  Waypoint,
+} from '@googlemaps/react-native-navigation-sdk';
 
 export type OnStatusUpdateCallback = (
   statusLevel: string,

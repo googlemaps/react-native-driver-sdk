@@ -12,64 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-buildscript {
-  repositories {
-    google()
-    mavenCentral()
-  }
+import groovy.json.JsonSlurper
 
-  dependencies {
-    classpath "com.android.tools.build:gradle:7.2.1"
-  }
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.2.1")
+    }
 }
 
 def isNewArchitectureEnabled() {
   return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
 
-plugins {
-  id "com.google.cloud.artifactregistry.gradle-plugin" version "2.1.5"
-}
-apply plugin: "com.android.library"
-
-
-def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+apply plugin: 'com.android.library'
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
 
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["ReactNativeDriverSdk_" + name]
-}
-
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["ReactNativeDriverSdk_" + name]).toInteger()
-}
-
 android {
-  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
+    namespace "com.google.android.react.driversdk"
+    
+    compileSdkVersion 31
 
-  defaultConfig {
-    minSdkVersion 26
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
-  }
-  buildTypes {
-    release {
-      minifyEnabled false
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
-  }
 
-  lintOptions {
-    disable "GradleCompatible"
-    disable 'LongLogTag'
-  }
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 31
+        versionCode 1
+        // get version name from package.json version
+        versionName "1.0"
+    }
 
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
+    buildTypes {
+        release {
+        minifyEnabled false
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+        disable "GradleCompatible"
+    }
 }
 
 allprojects {
@@ -90,40 +83,16 @@ repositories {
 }
 
 dependencies {
-  // For < 0.71, this will be from the local maven repo
-  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
   implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:5.0.0'
-  implementation 'io.grpc:grpc-android:1.12.0'
-  implementation 'io.grpc:grpc-okhttp:1.12.0'
-  implementation "com.facebook.react:react-native:+"
-  implementation 'androidx.appcompat:appcompat:1.4.2'
-  implementation 'com.google.code.gson:gson:2.10.1'
-  implementation "com.google.guava:guava:31.0.1-android"
-  implementation "androidx.concurrent:concurrent-futures:1.1.0"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0"
-  implementation "com.squareup.retrofit2:converter-gson:2.9.0"
-  implementation "com.squareup.retrofit2:retrofit:2.9.0"
-  implementation "com.squareup.retrofit2:adapter-guava:2.9.0"
-  implementation "com.google.guava:guava:31.1-android"
-  implementation "joda-time:joda-time:2.10.10"
+  implementation 'com.facebook.react:react-native:+'
+  implementation 'com.android.support:multidex:1.0.3'
+  implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+  api 'com.google.guava:guava:31.0.1-android'
   implementation 'junit:junit:4.12'
+
   testImplementation 'junit:junit:4.12'
-  annotationProcessor "com.google.auto.value:auto-value:1.8.2"
-  implementation "androidx.core:core:1.8.0"
-  implementation "org.checkerframework:checker-qual:3.18.0"
   testImplementation "com.google.truth:truth:1.1.2"
   testImplementation "org.mockito:mockito-core:3.6.0"
-  implementation "org.mockito:mockito-core:3.6.0"
   testImplementation "org.mockito:mockito-inline:3.6.0"
-  testImplementation "com.squareup.okhttp3:okhttp:3.14.2"
-  implementation project(':react-native-navigation-sdk')
-}
-
-if (isNewArchitectureEnabled()) {
-  react {
-    jsRootDir = file("../src/")
-    libraryName = "ReactNativeDriverSdk"
-    codegenJavaPackageName = "com.google.android.react.driversdk"
-  }
+  implementation project(':googlemaps_react-native-navigation-sdk')
 }

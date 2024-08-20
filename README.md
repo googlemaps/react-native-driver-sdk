@@ -32,6 +32,16 @@ This is the beta release of the Google Driver SDK package for React Native. It i
     yarn add https://github.com/googlemaps/react-native-driver-sdk#{version_tag}
     ```
 
+1. Install the `@googlemaps/react-native-navigation-sdk` dependency:
+
+    ```bash
+    npm install --save @googlemaps/react-native-navigation-sdk
+    ```
+    or
+    ```bash
+    yarn add @googlemaps/react-native-navigation-sdk
+    ```
+
 ### Android
 
 1. Set the `minSdkVersion` in `android/app/build.gradle`:
@@ -39,7 +49,7 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 ```groovy
 android {
     defaultConfig {
-        minSdkVersion 26
+        minSdkVersion 23
     }
 }
 ```
@@ -55,17 +65,25 @@ android {
 ### Ridesharing
 #### Initializing the API
 
-1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/example) for all details on how to set up the navigation component.
+1. As mentioned above, this library depends on the React Native: NavigationSDK library. Specifically, it depends on the existence of a `NavigationView` component in the application. 
 
 1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
     ```typescript
-            import RidesharingDriverApi from "react-native-driver-sdk";
+            import RidesharingDriverApi from "@googlemaps/react-native-driver-sdk";
 
             const ridesharing = new RidesharingDriverapi();
     ```
 
-2. Second step is to initialize the Api.
+2. Start navigation. Please refer to the Navigation SDK [Sample app](https://github.com/googlemaps/react-native-navigation-sdk/tree/main/example) for all details on how to set up the navigation component and its listeners.
+     
+      ```typescript
+          const { navigationController } = useNavigation();
+          ...
+          await navigationController.init();
+      ```
+
+3. Second step is to initialize the Api. Navigation must be initialized before the Driver SDK is initialized.
 
     ```typescript
         await ridesharingDriverApi
@@ -103,7 +121,7 @@ The vehicle reporter allows developers to enable/disable location reporting to F
 1. In your react-native component, import and instantiate the RidesharingDriverapi and reference it through variable.
 
     ```typescript
-            import DeliveryDriverApi from "react-native-driver-sdk";
+            import DeliveryDriverApi from "@googlemaps/react-native-driver-sdk";
 
             const deliveryApi = new DeliveryDriverapi();
     ```

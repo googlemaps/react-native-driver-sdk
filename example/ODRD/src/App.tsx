@@ -42,8 +42,11 @@ import {
   NavigationInitErrorCode,
   NavigationProvider,
   type TermsAndConditionsDialogOptions,
-} from 'react-native-navigation-sdk';
-import { RidesharingDriverApi, VehicleState } from 'react-native-driver-sdk';
+} from '@googlemaps/react-native-navigation-sdk';
+import {
+  RidesharingDriverApi,
+  VehicleState,
+} from '@googlemaps/react-native-driver-sdk';
 import {
   PROJECT_ID as PROVIDER_ID,
   ANDROID_HOST,

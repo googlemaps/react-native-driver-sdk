@@ -1,5 +1,5 @@
 {
-  "name": "react-native-driver-sdk",
+  "name": "@googlemaps/react-native-driver-sdk",
   "version": "0.1.0-beta",
   "author": "Google",
   "description": "A React Native library for Driver SDK on Google Maps Platform",
@@ -58,7 +58,7 @@
     "build": "bob build"
   },
   "dependencies": {
-    "react-native-navigation-sdk": "github:googlemaps/react-native-navigation-sdk#v0.4.2"
+    "@googlemaps/react-native-navigation-sdk": "^0.4.3"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",
@@ -66,7 +66,7 @@
     "@react-native/eslint-config": "^0.74.83",
     "@testing-library/react-native": "^12.5.0",
     "@types/jest": "^29.5.5",
-    "@types/react": "18.2.6",
+    "@types/react": "18.2.44",
     "commitlint": "^19.3.0",
     "del-cli": "^5.1.0",
     "eslint": "^8.51.0",
@@ -89,7 +89,7 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*",
-    "react-native-navigation-sdk": ">=0.4.2"
+    "react-native-navigation-sdk": ">=0.4.3"
   },
   "workspaces": [
     "example/LMFS",
@@ -105,7 +105,7 @@
     ],
     "moduleNameMapper": {
       "^react-native$": "<rootDir>/node_modules/react-native",
-      "^react-native-navigation-sdk$": "<rootDir>/node_modules/react-native-navigation-sdk"
+      "^@googlemaps/react-native-navigation-sdk$": "<rootDir>/node_modules/@googlemaps/react-native-navigation-sdk"
     }
   },
   "commitlint": {

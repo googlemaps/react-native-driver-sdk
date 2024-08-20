@@ -2,10 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-driver-sdk": ["./src/index"],
-      "react-native-navigation-sdk": [
-        "./node_modules/react-native-navigation-sdk/src"
-      ]
+      "@googlemaps/react-native-driver-sdk": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

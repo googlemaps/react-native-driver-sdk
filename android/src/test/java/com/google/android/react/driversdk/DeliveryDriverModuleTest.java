@@ -15,6 +15,10 @@ package com.google.android.react.driversdk.test;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
+
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -50,6 +54,7 @@ public class DeliveryDriverModuleTest {
 
   @Before
   public void setup() {
+
     ddm = new DeliveryDriverModule(reactContext);
     emptyPromise =
         new Promise() {
