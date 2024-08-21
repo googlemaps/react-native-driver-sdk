@@ -1,0 +1,63 @@
+{
+  "$schema": "https:/turbo.build/schema.json",
+  "pipeline": {
+    "build:android:lmfs": {
+      "inputs": [
+        "package.json",
+        "android",
+        "!android/build",
+        "src/*.ts",
+        "src/*.tsx",
+        "example/LMFS/package.json",
+        "example/LMFS/android",
+        "!example/LMFS/android/.gradle",
+        "!example/LMFS/android/build",
+        "!example/LMFS/android/app/build"
+      ],
+      "outputs": []
+    },
+    "build:ios:lmfs": {
+      "inputs": [
+        "package.json",
+        "*.podspec",
+        "ios",
+        "src/*.ts",
+        "src/*.tsx",
+        "example/LMFS/package.json",
+        "example/LMFS/ios",
+        "!example/LMFS/ios/build",
+        "!example/LMFS/ios/Pods"
+      ],
+      "outputs": []
+    },
+    "build:android:odrd": {
+      "inputs": [
+        "package.json",
+        "android",
+        "!android/build",
+        "src/*.ts",
+        "src/*.tsx",
+        "example/ODRD/package.json",
+        "example/ODRD/android",
+        "!example/ODRD/android/.gradle",
+        "!example/ODRD/android/build",
+        "!example/ODRD/android/app/build"
+      ],
+      "outputs": []
+    },
+    "build:ios:odrd": {
+      "inputs": [
+        "package.json",
+        "*.podspec",
+        "ios",
+        "src/*.ts",
+        "src/*.tsx",
+        "example/ODRD/package.json",
+        "example/ODRD/ios",
+        "!example/ODRD/ios/build",
+        "!example/ODRD/ios/Pods"
+      ],
+      "outputs": []
+    }
+  }
+}

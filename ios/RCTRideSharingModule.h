@@ -15,12 +15,12 @@
  */
 
 #import <React/RCTBridgeModule.h>
-#import "RidesharingViewController.h"
+#import "RidesharingDriverController.h"
 #import "JsErrorsConstants.h"
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCTRideSharingModule : NSObject <RCTBridgeModule>
-@property RidesharingViewController *viewController;
+@property RidesharingDriverController *driverController;
 
 @end
 

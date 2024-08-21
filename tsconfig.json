@@ -1,39 +1,28 @@
 {
-    "compilerOptions": {
-      "allowJs": true,
-      "allowSyntheticDefaultImports": true,
-      "esModuleInterop": true,
-      "isolatedModules": true,
-      "jsx": "react-native",
-      "lib": ["esnext"],
-      "types": ["react-native", "jest"],
-      "moduleResolution": "node",
-      "noEmit": true,
-      "strict": true,
-      "target": "esnext",
-      "noImplicitReturns": true,
-      "resolveJsonModule": true,
-      "skipLibCheck": true,
-      "noUncheckedIndexedAccess": true,
-      "forceConsistentCasingInFileNames": true,
-      "noFallthroughCasesInSwitch": true,
-      "noImplicitOverride": true,
-      "allowUnreachableCode": false,
-      "moduleSuffixes": [".android", ".ios", ""]
-    },
+  "compilerOptions": {
+    "rootDir": ".",
     "paths": {
-        "@app/*": ["./app/*"],
-        "@assets/*": ["./assets/*"],
-        "@components/*": ["./components/*"],
-        "@styles/*": ["./styles/*"],
-        "@utils/*": ["./utils/*"]
-      },      
-    "exclude": [
-      "node_modules",
-      "babel.config.js",
-      "metro.config.js",
-      "jest.config.js",
-      "__tests__/**/*-test.ts"
-    ]
-   }
-   
+      "@googlemaps/react-native-driver-sdk": ["./src/index"]
+    },
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": false, // TODO: set this to true
+    "noUnusedParameters": false, // TODO: set this to true
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "esnext",
+    "verbatimModuleSyntax": true
+  }
+}

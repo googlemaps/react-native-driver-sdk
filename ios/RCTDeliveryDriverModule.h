@@ -15,12 +15,12 @@
  */
 
 #import <React/RCTBridgeModule.h>
-#import "DeliveryViewController.h"
+#import "DeliveryDriverController.h"
 #import "JsErrorsConstants.h"
 NS_ASSUME_NONNULL_BEGIN
 
 @interface RCTDeliveryDriverModule : NSObject <RCTBridgeModule>
-@property DeliveryViewController *viewController;
+@property DeliveryDriverController *driverController;
 
 @end
 

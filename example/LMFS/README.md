@@ -1,0 +1,32 @@
+# LMFS Sample app
+
+## Description
+
+This is a sample application that show cases developers how to integrate with the React Native: DriverSDK library.
+
+## Prerequisites
+
+1. This library depends on the LMFS backend available in https://github.com/googlemaps/last-mile-fleet-solution-samples/tree/main/backend.
+This package provides docker-compose files to run the backend services at `/example/tools/backend` folder. For more information, please refer to the [README](../tools/backend/README.md) file in the tools/backend folder of the example app.
+
+1. Once the backend is setup, create a delivery vehicle and keep the vehicleId handy. In order to make it easier to create vehicles with tasks, you can use the `/upload-delivery-config.html` endpoint on the backend. [example json](https://raw.githubusercontent.com/googlemaps/last-mile-fleet-solution-samples/main/backend/src/test/resources/test.json)
+2. Go to the [App.tsx](/example/LMFS/App.tsx) file and update the VEHICLE_ID from the endpoint response.
+
+## How to run application
+
+1. Run `yarn install` from the current directory.
+
+1. Go to the [ios](./ios) folder and run `pod install`.
+
+1. Come back to the current directory.
+
+1. Then you can use `yarn run react-native run-android` or `yarn run react-native run-ios` depending the platform.
+
+## Debugging Fleet engine logs
+
+To make sure that location updates are propagating properly, you can use Fleet Engine logs.
+
+1. Go to https://console.cloud.google.com/ and select the relevant project.
+1. Open the "Logs Explorer".
+1. Run Query `jsonPayload.request.deliveryVehicleId="vehicle_id"` and `jsonPayload.@type="type.googleapis.com/maps.fleetengine.v1.UpdateDeliveryVehicleLog"`.
+1. This will show the location updates sent through the library.

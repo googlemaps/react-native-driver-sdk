@@ -28,6 +28,7 @@ This project follows
 - Linux, Mac OS X, or Windows.
 - [git](https://git-scm.com) (used for source version control).
 - An IDE such as [Android Studio](https://developer.android.com/studio) or [Visual Studio Code](https://code.visualstudio.com/).
+- [addlicense](https://github.com/google/addlicense)
 
 ## 2. Forking & cloning the repository
 
@@ -72,27 +73,6 @@ To update the Javascript codes, edit the library files inside node_modules
 
 Simply run the sample app to test your changes.
 
-## Submitting changes
-
-Copy your changes from the node_modules folder and paste it over to the root directory. Don't copy the entire contents of the node_modules, instead just copy the changes you made. This process can also be optimized with shell commands.
-
-### Android
-
-![rnProjectAndroid](/images/submit_android.png)
-
-
-### iOS
-
-Just copy the .m and .h files. There's no need to copy the .xcodeproj file unless new files are added to the library.
-
-![rnProjectXcode](/images/submit_ios.png)
-
-
-### Javacript
-
-![rnProjectJS](/images/submit_javascript.png)
-
-
 ### Code reviews
 
 All submissions, including submissions by project members, require review. We
@@ -113,14 +93,16 @@ keep the code consistent and avoid common pitfalls.
 
 #### Commit changes
 
-1. `git commit -a -m "<your informative commit message>"`
+1. This project uses `lefthook` to ensure tests pass before committing. Please configure your environment paths to include the Go binary path for `addlicense` and the Node binary path for `npx` in the `~/.lefthookrc` file. For more information, refer to the [lefthook documentation](https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md#rc).
 
-Please make sure all your check-ins have detailed commit messages explaining the patch.
-When naming the title of your pull request, please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0-beta.4/) guide. For example, for a fix to the Driver library:
+2. `git commit -a -m "<your informative commit message>"`
 
-`fix(navigation_view): fixed a bug!`
+    Please make sure all your check-ins have detailed commit messages explaining the patch.
+    When naming the title of your pull request, please follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0-beta.4/) guide. For example, for a fix to the Driver library: 
 
-2. `git push origin <name_of_your_branch>`
+    `fix: fixed a bug!`
+
+3. `git push origin <name_of_your_branch>`
 
 #### Create pull request
 
