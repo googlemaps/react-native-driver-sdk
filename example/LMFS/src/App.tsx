@@ -26,7 +26,6 @@ import {
   Switch,
   Dimensions,
   Platform,
-  findNodeHandle,
 } from 'react-native';
 
 import {
@@ -170,10 +169,6 @@ function LMFSSampleApp(): JSX.Element {
     };
   }, [clearInstance, navigationCallbacks, addListeners, removeListeners]);
 
-  const height =
-    Dimensions.get('window').height - 0.1 * Dimensions.get('window').height;
-  const width = Dimensions.get('window').width;
-
   const fetchAuthToken = async () => {
     try {
       console.log('Fetching auth token...');
@@ -198,7 +193,7 @@ function LMFSSampleApp(): JSX.Element {
         PROVIDER_ID,
         VEHICLE_ID,
         _tokenContext => {
-          console.log('onGetToken call');
+          console.log('onGetToken call, return token: ', authToken);
           // Check if the token is expired, in such case request a new one.
           return Promise.resolve(authToken || '');
         },
@@ -316,9 +311,12 @@ function LMFSSampleApp(): JSX.Element {
     deliveryDriverApi.setAbnormalTerminationReportingEnabled(updatedValue);
   };
 
+  const buttonColor = Platform.OS === 'android' ? '#2196f3' : 'white';
+  const controlsButtonColor = Platform.OS === 'android' ? 'red' : 'white';
+
   return !arePermissionsApproved ? (
     <View style={[styles.container]}>
-      <Text>Permissions not accepted</Text>
+      <Text style={styles.text}>Permissions not accepted</Text>
     </View>
   ) : (
     <View
@@ -330,42 +328,57 @@ function LMFSSampleApp(): JSX.Element {
       ]}
     >
       <View style={{ flex: 1 }}>
-        <View>
-          <NavigationView
-            width={width}
-            height={height}
-            mapViewCallbacks={mapViewCallbacks}
-            onNavigationViewControllerCreated={setNavigationViewController}
-            onMapViewControllerCreated={() => {}}
-            androidStylingOptions={{
-              primaryDayModeThemeColor: '#34eba8',
-              headerDistanceValueTextColor: '#76b5c5',
-              headerInstructionsFirstRowTextSize: '20f',
-            }}
-            iOSStylingOptions={{
-              navigationHeaderPrimaryBackgroundColor: '#34eba8',
-              navigationHeaderDistanceValueTextColor: '#76b5c5',
-            }}
-          />
-        </View>
+        <NavigationView
+          style={{ height: Dimensions.get('window').height }}
+          mapViewCallbacks={mapViewCallbacks}
+          onNavigationViewControllerCreated={setNavigationViewController}
+          onMapViewControllerCreated={() => {}}
+          androidStylingOptions={{
+            primaryDayModeThemeColor: '#34eba8',
+            headerDistanceValueTextColor: '#76b5c5',
+            headerInstructionsFirstRowTextSize: '20f',
+          }}
+          iOSStylingOptions={{
+            navigationHeaderPrimaryBackgroundColor: '#34eba8',
+            navigationHeaderDistanceValueTextColor: '#76b5c5',
+          }}
+        />
       </View>
       <View style={{ flex: 2, margin: 20 }}>
         {shouldShowControls ? (
           <View style={{ backgroundColor: '#2196f3' }}>
-            <Button title="Create Instance" onPress={createInstance} />
-            <Button title="Clear Instance" onPress={clearInstance} />
-            <Button title="Update time interval" onPress={setUpdateInterval} />
-            <Button title="Run navigation" onPress={runNavigation} />
+            <Button
+              title="Create Instance"
+              onPress={createInstance}
+              color={buttonColor}
+            />
+            <Button
+              title="Clear Instance"
+              onPress={clearInstance}
+              color={buttonColor}
+            />
+            <Button
+              title="Update time interval"
+              onPress={setUpdateInterval}
+              color={buttonColor}
+            />
+            <Button
+              title="Run navigation"
+              onPress={runNavigation}
+              color={buttonColor}
+            />
             <Button
               title="Get DriverSDK Version"
               onPress={onGetDriverSDKVersionClick}
+              color={buttonColor}
             />
             <Button
               title="Get delivery vehicle"
               onPress={onGetDeliveryVehicleClick}
+              color={buttonColor}
             />
             <View style={styles.rowContainer}>
-              <Text>Location Tracking</Text>
+              <Text style={styles.text}>Location Tracking</Text>
               <Switch
                 value={isLocationTrackingEnabled}
                 onValueChange={() => {
@@ -374,7 +387,7 @@ function LMFSSampleApp(): JSX.Element {
               />
             </View>
             <View style={styles.rowContainer}>
-              <Text>Abnormal Termination Reporting</Text>
+              <Text style={styles.text}>Abnormal Termination Reporting</Text>
               <Switch
                 value={isAbnormalTerminationEnabled}
                 onValueChange={() => {
@@ -382,7 +395,7 @@ function LMFSSampleApp(): JSX.Element {
                 }}
               />
             </View>
-            <Button title="Close" onPress={closeDialog} />
+            <Button title="Close" onPress={closeDialog} color={buttonColor} />
           </View>
         ) : null}
       </View>
@@ -390,6 +403,7 @@ function LMFSSampleApp(): JSX.Element {
         <Button
           title="Show controls"
           onPress={() => setShouldShowControls(!shouldShowControls)}
+          color={controlsButtonColor}
         />
       </View>
     </View>
@@ -415,11 +429,21 @@ const styles = StyleSheet.create({
   rowContainer: {
     flexDirection: 'row',
     alignSelf: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 5,
+    paddingTop: 5,
+    paddingRight: 20,
   },
   controlButton: {
     backgroundColor: 'red',
     alignSelf: 'flex-end',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginRight: 30,
+  },
+  text: {
+    color: 'white',
+    paddingRight: 10,
+    paddingLeft: 10,
   },
 });

@@ -6,9 +6,9 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 
 ## Requirements
 
-|             | Android | iOS       |
-| ----------- | ------- | --------- |
-| **Support** | SDK 23+ | iOS 14.0+ |
+|                                 | Android | iOS       |
+| ------------------------------- | ------- | --------- |
+| **Minimum mobile OS supported** | SDK 23+ | iOS 15.0+ |
 
 * A React Native project
 * A Google Cloud project with the [Navigation SDK enabled](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project) and the [Maps SDK for iOS enabled](https://developers.google.com/maps/documentation/navigation/ios-sdk/config)

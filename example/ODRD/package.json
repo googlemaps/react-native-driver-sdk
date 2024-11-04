@@ -12,7 +12,7 @@
     "build:ios": "cd ios && xcodebuild -workspace SampleApp.xcworkspace -scheme SampleApp -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
   "dependencies": {
-    "@googlemaps/react-native-navigation-sdk": "^0.4.3",
+    "@googlemaps/react-native-navigation-sdk": "^0.8.0",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
     "react": "18.2.0",
