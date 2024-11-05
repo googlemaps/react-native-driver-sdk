@@ -45,8 +45,8 @@ RUN echo '\nconfigurations.all {\n\
     }\n\
     }' >> build.gradle
 
-# Correct incorrect imports in all Java files within the backend directory
-RUN find . -name '*.java' -exec sed -i 's/import google\.maps\.fleetengine\.delivery\.v1/import com.google.maps.fleetengine.delivery.v1/g' {} +
+# Replace 'com.google.maps:grpc-google-maps-fleetengine-delivery-v1-java' version from 'latest.release' to '0.0.3231' in build.gradle
+RUN sed -i 's/com\.google\.maps:grpc-google-maps-fleetengine-delivery-v1-java:latest\.release/com\.google\.maps:grpc-google-maps-fleetengine-delivery-v1-java:0.0.3231/g' build.gradle
 
 # Set Python 3 as the default for gcloud
 ENV CLOUDSDK_PYTHON=python3
