@@ -13,11 +13,11 @@
 # limitations under the License.
 
 # Use an appropriate Java base image
-FROM openjdk:11
+FROM openjdk:17-slim
 
 # Install git
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git python3 && \
     rm -rf /var/lib/apt/lists/*
 
 # Accept build arguments for the git hash
@@ -38,11 +38,18 @@ WORKDIR /lmfs-backend/backend
 # Append the force gRPC versions to the build.gradle file
 RUN echo '\nconfigurations.all {\n\
     resolutionStrategy {\n\
-        force '\''io.grpc:grpc-stub:1.55.1'\''\n\
-        force '\''io.grpc:grpc-protobuf:1.55.1'\''\n\
-        force '\''io.grpc:grpc-netty:1.55.1'\''\n\
+    force '\''io.grpc:grpc-api:1.66.0'\''\n\
+    force '\''io.grpc:grpc-stub:1.66.0'\''\n\
+    force '\''io.grpc:grpc-protobuf:1.66.0'\''\n\
+    force '\''io.grpc:grpc-netty:1.66.0'\''\n\
     }\n\
-}' >> build.gradle
+    }' >> build.gradle
+
+# Replace 'com.google.maps:grpc-google-maps-fleetengine-delivery-v1-java' version from 'latest.release' to '0.0.3231' in build.gradle
+RUN sed -i 's/com\.google\.maps:grpc-google-maps-fleetengine-delivery-v1-java:latest\.release/com\.google\.maps:grpc-google-maps-fleetengine-delivery-v1-java:0.0.3231/g' build.gradle
+
+# Set Python 3 as the default for gcloud
+ENV CLOUDSDK_PYTHON=python3
 
 # Precompile the backend and download the Google Cloud SDK
 RUN ./gradlew compileJava war downloadCloudSdk

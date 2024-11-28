@@ -1,6 +1,6 @@
 {
   "name": "@googlemaps/react-native-driver-sdk",
-  "version": "0.2.0-beta",
+  "version": "0.3.0",
   "author": "Google",
   "description": "A React Native library for Driver SDK on Google Maps Platform",
   "main": "lib/commonjs/index",
@@ -58,7 +58,7 @@
     "build": "bob build"
   },
   "dependencies": {
-    "@googlemaps/react-native-navigation-sdk": "^0.4.3"
+    "@googlemaps/react-native-navigation-sdk": "^0.8.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",

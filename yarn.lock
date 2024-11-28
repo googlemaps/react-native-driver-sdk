@@ -1962,7 +1962,7 @@ __metadata:
   dependencies:
     "@commitlint/config-conventional": ^19.2.2
     "@evilmartians/lefthook": ^1.5.0
-    "@googlemaps/react-native-navigation-sdk": ^0.4.3
+    "@googlemaps/react-native-navigation-sdk": ^0.8.0
     "@react-native/eslint-config": ^0.74.83
     "@testing-library/react-native": ^12.5.0
     "@types/jest": ^29.5.5
@@ -1989,13 +1989,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@googlemaps/react-native-navigation-sdk@npm:^0.4.3":
-  version: 0.4.3
-  resolution: "@googlemaps/react-native-navigation-sdk@npm:0.4.3"
+"@googlemaps/react-native-navigation-sdk@npm:^0.8.0":
+  version: 0.8.0
+  resolution: "@googlemaps/react-native-navigation-sdk@npm:0.8.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 42991cf37fcf63e7fc69ac79a1e320ddd5a8f8e8cdec2876ffad4ed296eeade183c05209f14f90f756a2414282f240b7e9609c78f89910c9420dbf3114c6bbb7
+  checksum: f6d74ff44d59700efa5e2ae8e6f8ec43e1435579eb0a02013ef976cefd726efd419bf7db0109baf9715ec56cf2702cca282ac2203a9540d31c86ad7c91aea0db
   languageName: node
   linkType: hard
 
@@ -9527,7 +9527,7 @@ __metadata:
     "@babel/core": ^7.20.0
     "@babel/preset-env": ^7.20.0
     "@babel/runtime": ^7.20.0
-    "@googlemaps/react-native-navigation-sdk": ^0.4.3
+    "@googlemaps/react-native-navigation-sdk": ^0.8.0
     "@react-native/babel-preset": 0.74.86
     "@react-native/metro-config": 0.74.86
     "@react-native/typescript-config": 0.74.86
@@ -9554,7 +9554,7 @@ __metadata:
     "@babel/core": ^7.20.0
     "@babel/preset-env": ^7.20.0
     "@babel/runtime": ^7.20.0
-    "@googlemaps/react-native-navigation-sdk": ^0.4.3
+    "@googlemaps/react-native-navigation-sdk": ^0.8.0
     "@react-native/babel-preset": 0.74.86
     "@react-native/metro-config": 0.74.86
     "@react-native/typescript-config": 0.74.86
