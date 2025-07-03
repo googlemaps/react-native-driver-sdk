@@ -1,5 +1,9 @@
 # React Native: DriverSDK Library
 
+**European Economic Area (EEA) developers**
+
+If your billing address is in the European Economic Area, effective on 8 July 2025, the [Google Maps Platform EEA Terms of Service](https://cloud.google.com/terms/maps-platform/eea) will apply to your use of the Services. Functionality varies by region. [Learn more](https://developers.google.com/maps/comms/eea/faq).
+
 ## Description
 
 This is the beta release of the Google Driver SDK package for React Native. It is an early look at the package and is intended for testing and feedback collection. The functionalities and APIs in this version are subject to change.
