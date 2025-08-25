@@ -15,14 +15,14 @@
 import groovy.json.JsonSlurper
 
 buildscript {
-    ext.kotlin_version = '2.0.0'
+    ext.kotlin_version = '2.1.21'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.4.0")
+        classpath("com.android.tools.build:gradle:8.6.1")
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -40,7 +40,7 @@ if (isNewArchitectureEnabled()) {
 android {
     namespace "com.google.android.react.driversdk"
     
-    compileSdkVersion 31
+    compileSdkVersion 35
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -49,7 +49,7 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 31
+        targetSdkVersion 34
         versionCode 1
         // get version name from package.json version
         versionName "1.0"
@@ -85,14 +85,13 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:5.99.0'
+  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:6.2.0'
   implementation 'com.facebook.react:react-native:+'
   implementation 'com.android.support:multidex:1.0.3'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
   api 'com.google.guava:guava:31.0.1-android'
-  implementation 'junit:junit:4.12'
 
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'junit:junit:4.13.2'
   testImplementation "com.google.truth:truth:1.1.2"
   testImplementation "org.mockito:mockito-core:3.6.0"
   testImplementation "org.mockito:mockito-inline:3.6.0"

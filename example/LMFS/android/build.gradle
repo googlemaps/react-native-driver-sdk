@@ -12,11 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * Desugaring is required to be set on from navigation-sdk version 6.3.0 onwards.
+ */
+def enableDesugaring = true
+
 buildscript {
     ext {
-        buildToolsVersion = "34.0.0"
-        minSdkVersion = 23
-        compileSdkVersion = 34
+        buildToolsVersion = "35.0.0"
+        minSdkVersion = 34
+        compileSdkVersion = 35
         targetSdkVersion = 34
         ndkVersion = "26.1.10909125"
     }
@@ -25,9 +30,33 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
+        classpath('com.android.tools.build:gradle:8.6.1')
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+   }
+
+    subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty('android')) {
+                android {
+                    compileOptions {
+                        coreLibraryDesugaringEnabled enableDesugaring
+                    }
+                }
+
+                dependencies {
+                    // Desugar Java 8+ APIs
+                    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.3'
+                }
+            }
+        }
     }
 }
 
