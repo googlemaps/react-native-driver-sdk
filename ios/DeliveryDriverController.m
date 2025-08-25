@@ -15,9 +15,9 @@
  */
 
 #import "DeliveryDriverController.h"
+#import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 #import "AuthTokenFactory.h"
 #import "JsErrorsConstants.h"
-#import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 
 @implementation DeliveryDriverController
 GMTDVehicleReporter *_vehicleReporter;
@@ -33,20 +33,18 @@ DriverEventDispatcher *lmfsEventDispatch;
 }
 
 - (void)initializeWithSession:(GMSNavigationSession *)session {
-    _deliverySession = session;
+  _deliverySession = session;
 }
 
-- (void)createDeliveryDriverInstance:(NSString *)providerId
-                           vehicleId:(NSString *)vehicleId {
+- (void)createDeliveryDriverInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId {
   _lmfsTokenFactory = [[AuthTokenFactory alloc] init];
 
-  GMTDDriverContext *driverContext = [[GMTDDriverContext alloc]
-      initWithAccessTokenProvider:_lmfsTokenFactory
-                       providerID:providerId
-                        vehicleID:vehicleId
-                        navigator:_deliverySession.navigator];
-  _driverAPI =
-      [[GMTDDeliveryDriverAPI alloc] initWithDriverContext:driverContext];
+  GMTDDriverContext *driverContext =
+      [[GMTDDriverContext alloc] initWithAccessTokenProvider:_lmfsTokenFactory
+                                                  providerID:providerId
+                                                   vehicleID:vehicleId
+                                                   navigator:_deliverySession.navigator];
+  _driverAPI = [[GMTDDeliveryDriverAPI alloc] initWithDriverContext:driverContext];
 
   _vehicleReporter = _driverAPI.vehicleReporter;
   [_vehicleReporter addListener:self];
@@ -87,68 +85,64 @@ DriverEventDispatcher *lmfsEventDispatch;
   _driverAPI = NULL;
 }
 
-- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject {
-  [_driverAPI.deliveryVehicleManager getVehicleWithCompletion:^(
-                                         GMTDDeliveryVehicle *_Nullable vehicle,
-                                         NSError *_Nullable error) {
-    if (error != nil || vehicle == nil) {
-      reject(kDriverApiFailedToGetDeliveryVehicleCode,
-             kDriverApiFailedToGetDeliveryVehicleMessage, nil);
-      return;
-    }
+- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
+  [_driverAPI.deliveryVehicleManager
+      getVehicleWithCompletion:^(GMTDDeliveryVehicle *_Nullable vehicle, NSError *_Nullable error) {
+        if (error != nil || vehicle == nil) {
+          reject(kDriverApiFailedToGetDeliveryVehicleCode,
+                 kDriverApiFailedToGetDeliveryVehicleMessage, nil);
+          return;
+        }
 
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
-    result[@"providerId"] = vehicle.providerID;
-    result[@"vehicleName"] = vehicle.vehicleName;
-    result[@"vehicleId"] = vehicle.vehicleID;
+        NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+        result[@"providerId"] = vehicle.providerID;
+        result[@"vehicleName"] = vehicle.vehicleName;
+        result[@"vehicleId"] = vehicle.vehicleID;
 
-    NSMutableArray *vehicleStopList = [[NSMutableArray alloc] init];
-    for (int i = 0; i < vehicle.vehicleStops.count; i++) {
-      NSMutableDictionary *vehicleStop = [[NSMutableDictionary alloc] init];
+        NSMutableArray *vehicleStopList = [[NSMutableArray alloc] init];
+        for (int i = 0; i < vehicle.vehicleStops.count; i++) {
+          NSMutableDictionary *vehicleStop = [[NSMutableDictionary alloc] init];
 
-      if (vehicle.vehicleStops[i].plannedWaypoint != nil) {
-        vehicleStop[@"waypoint"] = [DeliveryDriverController
-            transformNavigationWaypointToDictionary:vehicle.vehicleStops[i]
-                                                        .plannedWaypoint];
-      }
+          if (vehicle.vehicleStops[i].plannedWaypoint != nil) {
+            vehicleStop[@"waypoint"] = [DeliveryDriverController
+                transformNavigationWaypointToDictionary:vehicle.vehicleStops[i].plannedWaypoint];
+          }
 
-      // vehicleStopState:
-      switch (vehicle.vehicleStops[i].state) {
-      case GMTDVehicleStopStateUnspecified:
-        vehicleStop[@"vehicleStopState"] = @(0);
-        break;
-      case GMTDVehicleStopStateNew:
-        vehicleStop[@"vehicleStopState"] = @(1);
-        break;
-      case GMTDVehicleStopStateEnroute:
-        vehicleStop[@"vehicleStopState"] = @(2);
-        break;
-      case GMTDVehicleStopStateArrived:
-        vehicleStop[@"vehicleStopState"] = @(3);
-        break;
-      default:
-        vehicleStop[@"vehicleStopState"] = @(0);
-        break;
-      }
+          // vehicleStopState:
+          switch (vehicle.vehicleStops[i].state) {
+            case GMTDVehicleStopStateUnspecified:
+              vehicleStop[@"vehicleStopState"] = @(0);
+              break;
+            case GMTDVehicleStopStateNew:
+              vehicleStop[@"vehicleStopState"] = @(1);
+              break;
+            case GMTDVehicleStopStateEnroute:
+              vehicleStop[@"vehicleStopState"] = @(2);
+              break;
+            case GMTDVehicleStopStateArrived:
+              vehicleStop[@"vehicleStopState"] = @(3);
+              break;
+            default:
+              vehicleStop[@"vehicleStopState"] = @(0);
+              break;
+          }
 
-      NSMutableArray *taskInfoList = [[NSMutableArray alloc] init];
+          NSMutableArray *taskInfoList = [[NSMutableArray alloc] init];
 
-      for (int i = 0; i < vehicle.vehicleStops[i].taskInfoArray.count; i++) {
-        [taskInfoList addObject:@{
-          @"taskId" : vehicle.vehicleStops[i].taskInfoArray[i].taskID,
-          @"taskDurationSeconds" :
-              @(vehicle.vehicleStops[i].taskInfoArray[i].taskDuration),
-        }];
-      }
+          for (int i = 0; i < vehicle.vehicleStops[i].taskInfoArray.count; i++) {
+            [taskInfoList addObject:@{
+              @"taskId" : vehicle.vehicleStops[i].taskInfoArray[i].taskID,
+              @"taskDurationSeconds" : @(vehicle.vehicleStops[i].taskInfoArray[i].taskDuration),
+            }];
+          }
 
-      vehicleStop[@"taskInfoList"] = taskInfoList;
-      [vehicleStopList addObject:vehicleStop];
-    }
-    result[@"vehicleStops"] = vehicleStopList;
+          vehicleStop[@"taskInfoList"] = taskInfoList;
+          [vehicleStopList addObject:vehicleStop];
+        }
+        result[@"vehicleStops"] = vehicleStopList;
 
-    resolve(result);
-  }];
+        resolve(result);
+      }];
 }
 
 + (void)setAbnormalTerminationReporting:(BOOL)isEnabled {
@@ -164,7 +158,6 @@ DriverEventDispatcher *lmfsEventDispatch;
 // Vehicle Reporter Listener for when vehicle updates are successful
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didSucceedVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate {
-
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
   eventBody[@"vehicleUpdate"] =
       [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
@@ -207,8 +200,7 @@ DriverEventDispatcher *lmfsEventDispatch;
   return _driverAPI != nil;
 }
 
-+ (NSDictionary *)transformCoordinateToDictionary:
-    (CLLocationCoordinate2D)coordinate {
++ (NSDictionary *)transformCoordinateToDictionary:(CLLocationCoordinate2D)coordinate {
   return @{
     @"lat" : @(coordinate.latitude),
     @"lng" : @(coordinate.longitude),
@@ -231,12 +223,11 @@ DriverEventDispatcher *lmfsEventDispatch;
   };
 }
 
-+ (NSDictionary *)transformNavigationWaypointToDictionary:
-    (GMSNavigationWaypoint *)waypoint {
++ (NSDictionary *)transformNavigationWaypointToDictionary:(GMSNavigationWaypoint *)waypoint {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"position"] = [DeliveryDriverController
-      transformCoordinateToDictionary:waypoint.coordinate];
+  dictionary[@"position"] =
+      [DeliveryDriverController transformCoordinateToDictionary:waypoint.coordinate];
   dictionary[@"preferredHeading"] = @(waypoint.preferredHeading);
   dictionary[@"vehicleStopover"] = @(waypoint.vehicleStopover);
   dictionary[@"preferSameSideOfRoad"] = @(waypoint.preferSameSideOfRoad);
@@ -252,28 +243,23 @@ DriverEventDispatcher *lmfsEventDispatch;
   return dictionary;
 }
 
-+ (NSDictionary *)transformVehicleUpdateToDictionary:
-    (GMTDVehicleUpdate *)vehicleUpdate {
++ (NSDictionary *)transformVehicleUpdateToDictionary:(GMTDVehicleUpdate *)vehicleUpdate {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"location"] =
-      [self transformCLLocationToDictionary:vehicleUpdate.location];
+  dictionary[@"location"] = [self transformCLLocationToDictionary:vehicleUpdate.location];
   dictionary[@"vehicleState"] = @(vehicleUpdate.vehicleState);
 
   if (vehicleUpdate.destinationWaypoint != nil) {
     dictionary[@"destinationWaypoint"] =
-        [self transformNavigationWaypointToDictionary:vehicleUpdate
-                                                          .destinationWaypoint];
+        [self transformNavigationWaypointToDictionary:vehicleUpdate.destinationWaypoint];
   }
 
   if (vehicleUpdate.remainingTimeInSeconds) {
-    dictionary[@"remainingTimeInSeconds"] =
-        vehicleUpdate.remainingTimeInSeconds;
+    dictionary[@"remainingTimeInSeconds"] = vehicleUpdate.remainingTimeInSeconds;
   }
 
   if (vehicleUpdate.remainingDistanceInMeters) {
-    dictionary[@"remainingDistanceInMeters"] =
-        vehicleUpdate.remainingDistanceInMeters;
+    dictionary[@"remainingDistanceInMeters"] = vehicleUpdate.remainingDistanceInMeters;
   }
 
   if (vehicleUpdate.route != nil) {
@@ -281,8 +267,8 @@ DriverEventDispatcher *lmfsEventDispatch;
 
     for (int index = 0; index < vehicleUpdate.route.count; index++) {
       CLLocation *indexLocation = vehicleUpdate.route[index];
-      [routeArray addObject:[DeliveryDriverController
-                                transformCLLocationToDictionary:indexLocation]];
+      [routeArray
+          addObject:[DeliveryDriverController transformCLLocationToDictionary:indexLocation]];
     }
 
     dictionary[@"route"] = routeArray;

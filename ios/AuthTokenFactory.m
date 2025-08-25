@@ -26,9 +26,9 @@ static const int kProviderErrorCode = 1000;
 static NSString *const kFailedToRetrieveTokenMessage =
     @"There was an error retrieving the auth token.";
 
-@implementation AuthTokenFactory{
-    NSString *_vehicleID;
-    NSString *_userToken;
+@implementation AuthTokenFactory {
+  NSString *_vehicleID;
+  NSString *_userToken;
 }
 
 static NSError *GRSDError(NSInteger errorCode, NSString *description) {
@@ -38,8 +38,8 @@ static NSError *GRSDError(NSInteger errorCode, NSString *description) {
   return [NSError errorWithDomain:kGRSDErrorDomain code:errorCode userInfo:userInfo];
 }
 
-- (void) setAuthToken: (nonnull NSString *) authToken {
-    _userToken = authToken;
+- (void)setAuthToken:(nonnull NSString *)authToken {
+  _userToken = authToken;
 }
 
 #pragma mark - GMTDAuthorization
@@ -47,13 +47,12 @@ static NSError *GRSDError(NSInteger errorCode, NSString *description) {
 // Function implementation for GMTDAuthorization to fetch token
 - (void)fetchTokenWithContext:(nullable GMTDAuthorizationContext *)authorizationContext
                    completion:(nonnull GMTDAuthTokenFetchCompletionHandler)completion {
-    if (!_userToken) {
-        completion(nil, GRSDError(kProviderErrorCode, kFailedToRetrieveTokenMessage));
-        return;
-    }
+  if (!_userToken) {
+    completion(nil, GRSDError(kProviderErrorCode, kFailedToRetrieveTokenMessage));
+    return;
+  }
 
-    completion(_userToken, nil);
+  completion(_userToken, nil);
 }
-
 
 @end

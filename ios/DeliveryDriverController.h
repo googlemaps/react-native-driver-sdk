@@ -21,28 +21,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DeliveryDriverController : UIViewController<GMTDVehicleReporterListener>
+@interface DeliveryDriverController : UIViewController <GMTDVehicleReporterListener>
 @property GMTDVehicleReporter *vehicleReporter;
 
-- (void)initializeWithSession: (GMSNavigationSession *) session;
-- (void)createDeliveryDriverInstance: (NSString *) providerId
-                           vehicleId: (NSString *) vehicleId;
-- (void)setLocationTrackingEnabled: (BOOL) isEnabled;
-- (void)setLocationReportingInterval: (double) interval;
+- (void)initializeWithSession:(GMSNavigationSession *)session;
+- (void)createDeliveryDriverInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId;
+- (void)setLocationTrackingEnabled:(BOOL)isEnabled;
+- (void)setLocationReportingInterval:(double)interval;
 + (NSString *)getDriverSdkVersion;
 + (NSString *)getDeliveryDriverSDKLongVersion;
 - (void)clearInstance;
-+ (void)setAbnormalTerminationReporting: (BOOL) isEnabled;
-- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject;
-- (void)setAuthToken: (NSString *) authToken;
++ (void)setAbnormalTerminationReporting:(BOOL)isEnabled;
+- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject;
+- (void)setAuthToken:(NSString *)authToken;
 - (void)addListener:(NSString *)eventName;
 - (void)removeListeners:(NSString *)eventName;
 - (bool)isNavigatorInitialized;
 - (bool)isDriverApiInitialized;
 + (NSDictionary *)transformCLLocationToDictionary:(CLLocation *)location;
 + (NSDictionary *)transformNavigationWaypointToDictionary:(GMSNavigationWaypoint *)waypoint;
-+ (NSDictionary *)transformVehicleUpdateToDictionary: (GMTDVehicleUpdate *) vehicleUpdate;
++ (NSDictionary *)transformVehicleUpdateToDictionary:(GMTDVehicleUpdate *)vehicleUpdate;
 + (NSDictionary *)transformCoordinateToDictionary:(CLLocationCoordinate2D)coordinate;
 @end
 

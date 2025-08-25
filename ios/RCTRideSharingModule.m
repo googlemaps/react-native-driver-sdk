@@ -37,30 +37,27 @@ RCT_EXPORT_MODULE(RCTRideSharingModule);
   return sharedInstance;
 }
 
-RCT_EXPORT_METHOD(createRidesharingInstance: (NSString *) providerId
-                  vehicleId: (NSString *) vehicleId
-                  resolve: (RCTPromiseResolveBlock)resolve
-                  rejecter: (RCTPromiseRejectBlock)reject) {
+RCT_EXPORT_METHOD(createRidesharingInstance
+                  : (NSString *)providerId vehicleId
+                  : (NSString *)vehicleId resolve
+                  : (RCTPromiseResolveBlock)resolve rejecter
+                  : (RCTPromiseRejectBlock)reject) {
   dispatch_async(dispatch_get_main_queue(), ^{
-    if (self->_driverController != nil &&
-        [self->_driverController isDriverApiInitialized]) {
-      reject(kDriverApiAlreadyExistsErrorCode,
-             kDriverApiAlreadyExistsErrorMessage, nil);
+    if (self->_driverController != nil && [self->_driverController isDriverApiInitialized]) {
+      reject(kDriverApiAlreadyExistsErrorCode, kDriverApiAlreadyExistsErrorMessage, nil);
       return;
     }
 
     GMSNavigationSession *session = [NavModule.sharedInstance getSession];
 
     if (session == nil || session.navigator == nil) {
-      reject(kNavigatorNotInitializedErrorCode,
-             kNavigatorNotInitializedErrorMessage, nil);
+      reject(kNavigatorNotInitializedErrorCode, kNavigatorNotInitializedErrorMessage, nil);
       return;
     }
 
     self->_driverController = [[RidesharingDriverController alloc] init];
     [self->_driverController initializeWithSession:session];
-    [self->_driverController createRidesharingInstance:providerId
-                                             vehicleId:vehicleId];
+    [self->_driverController createRidesharingInstance:providerId vehicleId:vehicleId];
     resolve(nil);
   });
 }
@@ -72,8 +69,7 @@ RCT_EXPORT_METHOD(setLocationTrackingEnabled
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode,
-             kDriverApiNotInitializedErrorMessage, nil);
+      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
       return;
     }
 
@@ -89,8 +85,7 @@ RCT_EXPORT_METHOD(setVehicleState
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode,
-             kDriverApiNotInitializedErrorMessage, nil);
+      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
       return;
     }
 
@@ -112,8 +107,7 @@ RCT_EXPORT_METHOD(setLocationReportingInterval
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode,
-             kDriverApiNotInitializedErrorMessage, nil);
+      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
       return;
     }
 
@@ -144,8 +138,7 @@ RCT_EXPORT_METHOD(setAuthToken
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode,
-             kDriverApiNotInitializedErrorMessage, nil);
+      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
       return;
     }
 

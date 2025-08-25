@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class GRSDVehicleModel;
 
 @interface AuthTokenFactory : NSObject <GMTDAuthorization>
-- (void) setAuthToken: (nonnull NSString *) authToken;
+- (void)setAuthToken:(nonnull NSString *)authToken;
 @end
 
 NS_ASSUME_NONNULL_END
