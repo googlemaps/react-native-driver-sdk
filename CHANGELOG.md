@@ -1,3 +1,5 @@
+# Changelog
+
 ## [0.3.0](https://github.com/googlemaps/react-native-driver-sdk/compare/0.2.0-beta...0.3.0) (2024-11-04)
 
 - feat: support latest navigation sdk library and Driver SDK's
