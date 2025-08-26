@@ -1650,12 +1650,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.20.0, @babel/runtime@npm:^7.8.4":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.8.4":
   version: 7.25.0
   resolution: "@babel/runtime@npm:7.25.0"
   dependencies:
     regenerator-runtime: ^0.14.0
   checksum: 4a2a374a58eb01aaa65c5762606e90b3a1f448e0c637d42278b6cc0b42a9f5399b5f381ba9f237ee087da2860d14dd2d1de7bddcbe18be6a3cafba97e44bed64
+  languageName: node
+  linkType: hard
+
+"@babel/runtime@npm:^7.26.10":
+  version: 7.28.3
+  resolution: "@babel/runtime@npm:7.28.3"
+  checksum: dd22662b9e02b6e66cfb061d6f9730eb0aa3b3a390a7bd70fe9a64116d86a3704df6d54ab978cb4acc13b58dbf63a3d7dd4616b0b87030eb14a22835e0aa602d
   languageName: node
   linkType: hard
 
@@ -9526,7 +9533,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.20.0
     "@babel/preset-env": ^7.20.0
-    "@babel/runtime": ^7.20.0
+    "@babel/runtime": ^7.26.10
     "@googlemaps/react-native-navigation-sdk": ^0.8.0
     "@react-native/babel-preset": 0.74.86
     "@react-native/metro-config": 0.74.86
@@ -9553,7 +9560,7 @@ __metadata:
   dependencies:
     "@babel/core": ^7.20.0
     "@babel/preset-env": ^7.20.0
-    "@babel/runtime": ^7.20.0
+    "@babel/runtime": ^7.26.10
     "@googlemaps/react-native-navigation-sdk": ^0.8.0
     "@react-native/babel-preset": 0.74.86
     "@react-native/metro-config": 0.74.86
