@@ -15,13 +15,13 @@
  */
 
 #ifdef RCT_NEW_ARCH_ENABLED
- #import "RNGoogleReactDriversdkSpec.h"
+#import "RNGoogleReactDriversdkSpec.h"
 
- @interface GoogleReactDriversdk : NSObject <NativeGoogleReactDriversdkSpec>
- #else
- #import <React/RCTBridgeModule.h>
+@interface GoogleReactDriversdk : NSObject <NativeGoogleReactDriversdkSpec>
+#else
+#import <React/RCTBridgeModule.h>
 
- @interface GoogleReactDriversdk : NSObject <RCTBridgeModule>
- #endif
+@interface GoogleReactDriversdk : NSObject <RCTBridgeModule>
+#endif
 
- @end
+@end

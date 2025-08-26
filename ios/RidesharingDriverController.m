@@ -15,8 +15,8 @@
  */
 
 #import "RidesharingDriverController.h"
-#import "AuthTokenFactory.h"
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
+#import "AuthTokenFactory.h"
 
 @import UserNotifications;
 
@@ -32,24 +32,22 @@ DriverEventDispatcher *driverEventDispatch;
   _ridesharingSession = session;
 }
 
-- (void)createRidesharingInstance:(NSString *)providerId
-                        vehicleId:(NSString *)vehicleId {
+- (void)createRidesharingInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId {
   _tokenFactory = [[AuthTokenFactory alloc] init];
 
-  _rideSharingDriverContext = [[GMTDDriverContext alloc]
-      initWithAccessTokenProvider:_tokenFactory
-                       providerID:providerId
-                        vehicleID:vehicleId
-                        navigator:_ridesharingSession.navigator];
+  _rideSharingDriverContext =
+      [[GMTDDriverContext alloc] initWithAccessTokenProvider:_tokenFactory
+                                                  providerID:providerId
+                                                   vehicleID:vehicleId
+                                                   navigator:_ridesharingSession.navigator];
 
-  _rideSharingDriverAPI = [[GMTDRidesharingDriverAPI alloc]
-      initWithDriverContext:_rideSharingDriverContext];
+  _rideSharingDriverAPI =
+      [[GMTDRidesharingDriverAPI alloc] initWithDriverContext:_rideSharingDriverContext];
   driverEventDispatch = [DriverEventDispatcher allocWithZone:nil];
 
   _ridesharingVehicleReporter = _rideSharingDriverAPI.vehicleReporter;
   [_ridesharingVehicleReporter addListener:self];
-  [_ridesharingSession.roadSnappedLocationProvider
-      addListener:_ridesharingVehicleReporter];
+  [_ridesharingSession.roadSnappedLocationProvider addListener:_ridesharingVehicleReporter];
 }
 
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled {
@@ -79,8 +77,7 @@ DriverEventDispatcher *driverEventDispatch;
 - (void)clearInstance {
   [_ridesharingVehicleReporter setLocationTrackingEnabled:NO];
   [_ridesharingVehicleReporter removeListener:self];
-  [_ridesharingSession.roadSnappedLocationProvider
-      removeListener:_ridesharingVehicleReporter];
+  [_ridesharingSession.roadSnappedLocationProvider removeListener:_ridesharingVehicleReporter];
   _ridesharingVehicleReporter = NULL;
   _rideSharingDriverAPI = NULL;
 }
@@ -98,11 +95,10 @@ DriverEventDispatcher *driverEventDispatch;
 // Vehicle Reporter Listener for when vehicle updates are successful
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didSucceedVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate {
-
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
   if (vehicleUpdate != nil) {
-    NSDictionary *dictionary = [RidesharingDriverController
-        transformVehicleUpdateToDictionary:vehicleUpdate];
+    NSDictionary *dictionary =
+        [RidesharingDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
     eventBody[@"vehicleUpdate"] = dictionary;
   }
 
@@ -116,8 +112,8 @@ DriverEventDispatcher *driverEventDispatch;
   NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
 
   if (vehicleUpdate != nil) {
-    eventBody[@"vehicleUpdate"] = [RidesharingDriverController
-        transformVehicleUpdateToDictionary:vehicleUpdate];
+    eventBody[@"vehicleUpdate"] =
+        [RidesharingDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
   }
 
   if (error != nil) {
@@ -147,8 +143,7 @@ DriverEventDispatcher *driverEventDispatch;
   return _rideSharingDriverAPI != nil;
 }
 
-+ (NSDictionary *)transformCoordinateToDictionary:
-    (CLLocationCoordinate2D)coordinate {
++ (NSDictionary *)transformCoordinateToDictionary:(CLLocationCoordinate2D)coordinate {
   return @{
     @"lat" : @(coordinate.latitude),
     @"lng" : @(coordinate.longitude),
@@ -171,12 +166,11 @@ DriverEventDispatcher *driverEventDispatch;
   };
 }
 
-+ (NSDictionary *)transformNavigationWaypointToDictionary:
-    (GMSNavigationWaypoint *)waypoint {
++ (NSDictionary *)transformNavigationWaypointToDictionary:(GMSNavigationWaypoint *)waypoint {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"position"] = [RidesharingDriverController
-      transformCoordinateToDictionary: waypoint.coordinate];
+  dictionary[@"position"] =
+      [RidesharingDriverController transformCoordinateToDictionary:waypoint.coordinate];
   dictionary[@"preferredHeading"] = @(waypoint.preferredHeading);
   dictionary[@"vehicleStopover"] = @(waypoint.vehicleStopover);
   dictionary[@"preferSameSideOfRoad"] = @(waypoint.preferSameSideOfRoad);
@@ -192,28 +186,23 @@ DriverEventDispatcher *driverEventDispatch;
   return dictionary;
 }
 
-+ (NSDictionary *)transformVehicleUpdateToDictionary:
-    (GMTDVehicleUpdate *)vehicleUpdate {
++ (NSDictionary *)transformVehicleUpdateToDictionary:(GMTDVehicleUpdate *)vehicleUpdate {
   NSMutableDictionary *dictionary = [[NSMutableDictionary alloc] init];
 
-  dictionary[@"location"] =
-      [self transformCLLocationToDictionary:vehicleUpdate.location];
+  dictionary[@"location"] = [self transformCLLocationToDictionary:vehicleUpdate.location];
   dictionary[@"vehicleState"] = @(vehicleUpdate.vehicleState);
 
   if (vehicleUpdate.destinationWaypoint != nil) {
     dictionary[@"destinationWaypoint"] =
-        [self transformNavigationWaypointToDictionary:vehicleUpdate
-                                                          .destinationWaypoint];
+        [self transformNavigationWaypointToDictionary:vehicleUpdate.destinationWaypoint];
   }
 
   if (vehicleUpdate.remainingTimeInSeconds) {
-    dictionary[@"remainingTimeInSeconds"] =
-        vehicleUpdate.remainingTimeInSeconds;
+    dictionary[@"remainingTimeInSeconds"] = vehicleUpdate.remainingTimeInSeconds;
   }
 
   if (vehicleUpdate.remainingDistanceInMeters) {
-    dictionary[@"remainingDistanceInMeters"] =
-        vehicleUpdate.remainingDistanceInMeters;
+    dictionary[@"remainingDistanceInMeters"] = vehicleUpdate.remainingDistanceInMeters;
   }
 
   if (vehicleUpdate.route != nil) {
@@ -221,8 +210,8 @@ DriverEventDispatcher *driverEventDispatch;
 
     for (int index = 0; index < vehicleUpdate.route.count; index++) {
       CLLocation *indexLocation = vehicleUpdate.route[index];
-      [routeArray addObject:[RidesharingDriverController
-                                transformCLLocationToDictionary:indexLocation]];
+      [routeArray
+          addObject:[RidesharingDriverController transformCLLocationToDictionary:indexLocation]];
     }
 
     dictionary[@"route"] = routeArray;

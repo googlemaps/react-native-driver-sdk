@@ -16,15 +16,14 @@
 
 #import "DriverEventDispatcher.h"
 
-@implementation DriverEventDispatcher
-{
+@implementation DriverEventDispatcher {
   bool hasListeners;
 }
 
 RCT_EXPORT_MODULE(DriverEventDispatcher);
 
 + (id)allocWithZone:(NSZone *)zone {
-    static DriverEventDispatcher *sharedInstance = nil;
+  static DriverEventDispatcher *sharedInstance = nil;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     sharedInstance = [super allocWithZone:zone];
@@ -34,33 +33,29 @@ RCT_EXPORT_MODULE(DriverEventDispatcher);
 
 // Contains the function names of the callbacks that are callable
 - (NSArray<NSString *> *)supportedEvents {
-  return @[
-    @"updateStatus",
-    @"didSucceedVehicleUpdate",
-    @"didFailVehicleUpdate"
-  ];
+  return @[ @"updateStatus", @"didSucceedVehicleUpdate", @"didFailVehicleUpdate" ];
 }
 
 // Will be called when this module's first listener is added.
--(void)startObserving {
+- (void)startObserving {
   hasListeners = YES;
   // Set up any upstream listeners or background tasks as necessary
 }
 
 // Will be called when this module's last listener is removed, or on dealloc.
--(void)stopObserving {
+- (void)stopObserving {
   hasListeners = NO;
   // Remove upstream listeners, stop unnecessary background tasks
 }
 
--(bool)hasListeners {
+- (bool)hasListeners {
   return hasListeners;
 }
 
 // Triggers the events using the event/function name to be triggered on the JS side
 - (void)sendEventName:(NSString *)eventName body:(id)body {
   if (hasListeners) {
-      [self sendEventWithName:eventName body:body];
+    [self sendEventWithName:eventName body:body];
   }
 }
 

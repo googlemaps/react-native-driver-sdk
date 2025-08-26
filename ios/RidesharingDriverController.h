@@ -16,20 +16,18 @@
 
 #import <UIKit/UIKit.h>
 @import GoogleNavigation;
-#import "DriverEventDispatcher.h"
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
+#import "DriverEventDispatcher.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RidesharingDriverController
-    : UIViewController <GMTDVehicleReporterListener>
+@interface RidesharingDriverController : UIViewController <GMTDVehicleReporterListener>
 
 @property GMTDVehicleReporter *vReporter;
 
 // Retrieve the NavigationSDK navigation session
 - (void)initializeWithSession:(GMSNavigationSession *)session;
-- (void)createRidesharingInstance:(NSString *)providerId
-                        vehicleId:(NSString *)vehicleId;
+- (void)createRidesharingInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId;
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled;
 - (void)setVehicleState:(BOOL)isOnline;
 - (void)setLocationReportingInterval:(double)interval;
@@ -44,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool)isDriverApiInitialized;
 + (NSDictionary *)transformCLLocationToDictionary:(CLLocation *)location;
 + (NSDictionary *)transformNavigationWaypointToDictionary:(GMSNavigationWaypoint *)waypoint;
-+ (NSDictionary *)transformVehicleUpdateToDictionary: (GMTDVehicleUpdate *) vehicleUpdate;
++ (NSDictionary *)transformVehicleUpdateToDictionary:(GMTDVehicleUpdate *)vehicleUpdate;
 + (NSDictionary *)transformCoordinateToDictionary:(CLLocationCoordinate2D)coordinate;
 @end
 

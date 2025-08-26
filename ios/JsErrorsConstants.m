@@ -23,5 +23,7 @@ NSString* const kDriverApiAlreadyExistsErrorCode = @"DRIVER_API_ALREADY_EXISTS_C
 NSString* const kDriverApiAlreadyExistsErrorMessage = @"Driver API already exists.";
 NSString* const kNavigatorNotInitializedErrorCode = @"NO_NAVIGATOR_CODE";
 NSString* const kNavigatorNotInitializedErrorMessage = @"Navigator is not initialized.";
-NSString* const kDriverApiFailedToGetDeliveryVehicleCode = @"DRIVER_API_FAILED_TO_GET_DELIVERY_VEHICLE";
-NSString* const kDriverApiFailedToGetDeliveryVehicleMessage = @"There was an error retrieving the delivery vehicle";
+NSString* const kDriverApiFailedToGetDeliveryVehicleCode =
+    @"DRIVER_API_FAILED_TO_GET_DELIVERY_VEHICLE";
+NSString* const kDriverApiFailedToGetDeliveryVehicleMessage =
+    @"There was an error retrieving the delivery vehicle";

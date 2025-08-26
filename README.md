@@ -12,7 +12,7 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 
 |                                 | Android | iOS       |
 | ------------------------------- | ------- | --------- |
-| **Minimum mobile OS supported** | SDK 23+ | iOS 15.0+ |
+| **Minimum mobile OS supported** | SDK 23+ | iOS 16.0+ |
 
 * A React Native project
 * A Google Cloud project with the [Navigation SDK enabled](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project) and the [Maps SDK for iOS enabled](https://developers.google.com/maps/documentation/navigation/ios-sdk/config)
@@ -58,11 +58,31 @@ android {
 }
 ```
 
+2. **Enable Core Library Desugaring**
+
+   Core library desugaring **must be enabled** for your Android project, regardless of your minSdkVersion.
+
+   To enable desugaring, update your `android/app/build.gradle` file:
+
+   ```groovy
+   android {
+       ...
+       compileOptions {
+           coreLibraryDesugaringEnabled true
+           ...
+       }
+   }
+
+   dependencies {
+       coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.4'
+   }
+   ```
+
 ### iOS
 
 1. Set the iOS version in your application PodFile.
 
-   `platform: ios, '14.0'`
+   `platform: ios, '16.0'`
 
 ## Usage
 
@@ -189,31 +209,31 @@ To get the DriverSDK version being used, you can call the **getDriverSdkVersion*
 
 ### List of sample functions in ODRD
 
-| Function                                                                | Description                                                                                                     |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `RidesharingDriverApi.initialize`                                      | create the instance of RidesharingAPI.        |
-| `RidesharingDriverApi.getRidesharingVehicleReporter`                                         | Vehicle reporter for the vehicle that reports location and vehicle state to Fleet Engine. An app is allowed only one vehicle reporter.                                                                              |
-| `RidesharingVehicleReporter.setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                        |
-| `RidesharingVehicleReporter.setVehicleState(VehicleState)`                                           | Set vehicle state to Online/Offline to Fleet Engine.
-| `RidesharingVehicleReporter.setLocationReportingInterval(number)`                                           | Set the reporting interval(seconds).                                                                                            |                                                                             
-| `RidesharingDriverApi.getDriverSdkVersion()`                                              | get native driversdk version.                             |
-| `RidesharingDriverApi.clearInstance()`                                                     | clear the api instance.                              |
-| `RidesharingDriverApi.setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
+| Function                                                          | Description                                                                                                                            |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `RidesharingDriverApi.initialize`                                 | create the instance of RidesharingAPI.                                                                                                 |
+| `RidesharingDriverApi.getRidesharingVehicleReporter`              | Vehicle reporter for the vehicle that reports location and vehicle state to Fleet Engine. An app is allowed only one vehicle reporter. |
+| `RidesharingVehicleReporter.setLocationTrackingEnabled(boolean)`  | Enable/disabled location tracking(logs).                                                                                               |
+| `RidesharingVehicleReporter.setVehicleState(VehicleState)`        | Set vehicle state to Online/Offline to Fleet Engine.                                                                                   |
+| `RidesharingVehicleReporter.setLocationReportingInterval(number)` | Set the reporting interval(seconds).                                                                                                   |
+| `RidesharingDriverApi.getDriverSdkVersion()`                      | get native driversdk version.                                                                                                          |
+| `RidesharingDriverApi.clearInstance()`                            | clear the api instance.                                                                                                                |
+| `RidesharingDriverApi.setAbnormalTerminationReporting(boolean)`   | enable/disable abnormal termination reporting.                                                                                         |
 
 
 ### List of sample functions in LMFS
 
-| Function                                                                | Description                                                                                                     |
-| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `DeliveryDriverApi.initialize`                                      | create the instance of DeliveryDriverAPI.        |
-| `DeliveryDriverApi.getDeliveryVehicleReporter`                                         | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter.                                                                              |
-| `DeliveryDriverApi.getDeliveryVehicleManager` | Returns a vehicle manager that can be used to fetch the delivery vehicle from Fleet Engine |
-| `DeliveryVehicleReporter.setLocationTrackingEnabled(boolean)`                                           | Enable/disabled location tracking(logs).                                                                                 |
-| `DeliveryVehicleReporter.setLocationReportingInterval(number)`                                           | Set the log interval(seconds).                                                                                            |                                                                
-| `DeliveryVehicleReporter.getDriverSdkVersion()`                                              | get delivery driversdk version.                             |               |
-| `DeliveryVehicleManager.getDeliveryVehicle()`                                                     |  Fetch the delivery vehicle from Fleet Engine |
-| `DeliveryVehicleReporter.clearInstance()`                                                     |  clear instance.                              |
-| `DeliveryVehicleReporter.setAbnormalTerminationReporting(boolean)`                                                        | enable/disable abnormal termination reporting. |
+| Function                                                           | Description                                                                                                                      |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `DeliveryDriverApi.initialize`                                     | create the instance of DeliveryDriverAPI.                                                                                        |
+| `DeliveryDriverApi.getDeliveryVehicleReporter`                     | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter. |
+| `DeliveryDriverApi.getDeliveryVehicleManager`                      | Returns a vehicle manager that can be used to fetch the delivery vehicle from Fleet Engine                                       |
+| `DeliveryVehicleReporter.setLocationTrackingEnabled(boolean)`      | Enable/disabled location tracking(logs).                                                                                         |
+| `DeliveryVehicleReporter.setLocationReportingInterval(number)`     | Set the log interval(seconds).                                                                                                   |
+| `DeliveryVehicleReporter.getDriverSdkVersion()`                    | get delivery driversdk version.                                                                                                  |  |
+| `DeliveryVehicleManager.getDeliveryVehicle()`                      | Fetch the delivery vehicle from Fleet Engine                                                                                     |
+| `DeliveryVehicleReporter.clearInstance()`                          | clear instance.                                                                                                                  |
+| `DeliveryVehicleReporter.setAbnormalTerminationReporting(boolean)` | enable/disable abnormal termination reporting.                                                                                   |
 
 ### Requesting and handling permissions
 
