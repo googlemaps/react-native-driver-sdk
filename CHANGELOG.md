@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/googlemaps/react-native-driver-sdk/compare/0.3.1...0.3.2) (2025-08-28)
+
+
+### Bug Fixes
+
+* remove mistyped peerdependency ([#59](https://github.com/googlemaps/react-native-driver-sdk/issues/59)) ([21c29f1](https://github.com/googlemaps/react-native-driver-sdk/commit/21c29f19c9a3d9e19beedae51ac15979180eb9f7))
+
 ## [0.3.1](https://github.com/googlemaps/react-native-driver-sdk/compare/0.3.0...0.3.1) (2025-08-26)
 
 
