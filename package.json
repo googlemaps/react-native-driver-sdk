@@ -1,6 +1,6 @@
 {
   "name": "@googlemaps/react-native-driver-sdk",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Google",
   "description": "A React Native library for Driver SDK on Google Maps Platform",
   "main": "lib/commonjs/index",
