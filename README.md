@@ -33,7 +33,7 @@ This is the beta release of the Google Driver SDK package for React Native. It i
     ```
     or
     ```bash
-    yarn add https://github.com/googlemaps/react-native-driver-sdk#{version_tag}
+    yarn add @googlemaps/react-native-driver-sdk@https://github.com/googlemaps/react-native-driver-sdk#{version_tag}
     ```
 
 1. Install the `@googlemaps/react-native-navigation-sdk` dependency:
