@@ -85,8 +85,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*",
-    "react-native-navigation-sdk": ">=0.10.0"
+    "react-native": "*"
   },
   "workspaces": [
     "example/LMFS",
