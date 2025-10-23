@@ -175,9 +175,8 @@ Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. T
 The vehicle reporter allows developers to enable/disable location reporting to Fleet Engine.
 
 ```typescript
-  const vehicleReporter = deliveryApi.getRidesharingVehicleReporter()
+  const vehicleReporter = deliveryApi.getDeliveryVehicleReporter()
   await vehicleReporter.setLocationTrackingEnabled(true);
-  await vehicleReporter.setVehicleState(VehicleState.ONLINE);
 ```
 
 #### Getting a `DeliveryVehicleManager`
@@ -207,33 +206,33 @@ To get the DriverSDK version being used, you can call the **getDriverSdkVersion*
   const sdkVersion = await driverApi.getDriverSdkVersion();
 ```
 
-### List of sample functions in ODRD
+### List of functions in ODRD
 
 | Function                                                          | Description                                                                                                                            |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `RidesharingDriverApi.initialize`                                 | create the instance of RidesharingAPI.                                                                                                 |
+| `RidesharingDriverApi.initialize`                                 | Create the instance of RidesharingAPI.                                                                                                 |
 | `RidesharingDriverApi.getRidesharingVehicleReporter`              | Vehicle reporter for the vehicle that reports location and vehicle state to Fleet Engine. An app is allowed only one vehicle reporter. |
 | `RidesharingVehicleReporter.setLocationTrackingEnabled(boolean)`  | Enable/disabled location tracking(logs).                                                                                               |
 | `RidesharingVehicleReporter.setVehicleState(VehicleState)`        | Set vehicle state to Online/Offline to Fleet Engine.                                                                                   |
 | `RidesharingVehicleReporter.setLocationReportingInterval(number)` | Set the reporting interval(seconds).                                                                                                   |
-| `RidesharingDriverApi.getDriverSdkVersion()`                      | get native driversdk version.                                                                                                          |
-| `RidesharingDriverApi.clearInstance()`                            | clear the api instance.                                                                                                                |
-| `RidesharingDriverApi.setAbnormalTerminationReporting(boolean)`   | enable/disable abnormal termination reporting.                                                                                         |
+| `RidesharingDriverApi.getDriverSdkVersion()`                      | Get native driversdk version.                                                                                                          |
+| `RidesharingDriverApi.clearInstance()`                            | Clear the api instance.                                                                                                                |
+| `RidesharingDriverApi.setAbnormalTerminationReporting(boolean)`   | Enable/disable abnormal termination reporting.                                                                                         |
 
 
-### List of sample functions in LMFS
+### List of functions in LMFS
 
 | Function                                                           | Description                                                                                                                      |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `DeliveryDriverApi.initialize`                                     | create the instance of DeliveryDriverAPI.                                                                                        |
+| `DeliveryDriverApi.initialize`                                     | Create the instance of DeliveryDriverAPI.                                                                                        |
 | `DeliveryDriverApi.getDeliveryVehicleReporter`                     | Vehicle reporter for a delivery vehicle that reports location and stop information. An app is allowed only one vehicle reporter. |
 | `DeliveryDriverApi.getDeliveryVehicleManager`                      | Returns a vehicle manager that can be used to fetch the delivery vehicle from Fleet Engine                                       |
 | `DeliveryVehicleReporter.setLocationTrackingEnabled(boolean)`      | Enable/disabled location tracking(logs).                                                                                         |
 | `DeliveryVehicleReporter.setLocationReportingInterval(number)`     | Set the log interval(seconds).                                                                                                   |
-| `DeliveryVehicleReporter.getDriverSdkVersion()`                    | get delivery driversdk version.                                                                                                  |  |
+| `DeliveryVehicleReporter.getDriverSdkVersion()`                    | Get delivery driversdk version.                                                                                                  |  |
 | `DeliveryVehicleManager.getDeliveryVehicle()`                      | Fetch the delivery vehicle from Fleet Engine                                                                                     |
-| `DeliveryVehicleReporter.clearInstance()`                          | clear instance.                                                                                                                  |
-| `DeliveryVehicleReporter.setAbnormalTerminationReporting(boolean)` | enable/disable abnormal termination reporting.                                                                                   |
+| `DeliveryVehicleReporter.clearInstance()`                          | Clear instance.                                                                                                                  |
+| `DeliveryVehicleReporter.setAbnormalTerminationReporting(boolean)` | Enable/disable abnormal termination reporting.                                                                                   |
 
 ### Requesting and handling permissions
 
