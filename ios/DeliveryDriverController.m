@@ -53,14 +53,6 @@ DriverEventDispatcher *lmfsEventDispatch;
   lmfsEventDispatch = [DriverEventDispatcher allocWithZone:nil];
 }
 
-- (void)setVehicleState:(BOOL)isOnline {
-  if (isOnline) {
-    [_vehicleReporter updateVehicleState:GMTDVehicleStateOnline];
-  } else {
-    [_vehicleReporter updateVehicleState:GMTDVehicleStateOffline];
-  }
-}
-
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled {
   [_vehicleReporter setLocationTrackingEnabled:isEnabled];
 }
