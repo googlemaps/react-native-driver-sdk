@@ -20,7 +20,7 @@ addlicense -f header_template.txt $@ \
         --ignore "**/android/.gradle/**" \
         --ignore "**/android/.idea/**" \
         --ignore "**/ios/build/**" \
-        --ignore "example/vendor/**" \
+        --ignore "example/**/vendor/**" \
         --ignore "lib/**" \
         --ignore "coverage/**" \
         --ignore ".yarn/**" \

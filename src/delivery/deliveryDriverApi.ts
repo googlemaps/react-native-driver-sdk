@@ -25,7 +25,7 @@ import {
 } from '../shared';
 import type { DeliveryVehicle } from './types';
 
-interface DeliveryVehicleReporter extends VehicleReporter {}
+type DeliveryVehicleReporter = VehicleReporter;
 
 interface DeliveryVehicleManager {
   /**
@@ -48,7 +48,7 @@ export class DeliveryDriverApi extends DriverApi {
     vehicleId: string,
     onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
-  ) {
+  ): Promise<void> {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 

@@ -1,6 +1,4 @@
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable require-jsdoc */
 /**
  * Copyright 2024 Google LLC
  *
@@ -17,19 +15,18 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
-  Button,
-  Switch,
   Platform,
-  Dimensions,
+  Modal,
+  Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  type NavigationViewController,
   type ArrivalEvent,
   type RoutingOptions,
   TravelMode,
@@ -61,7 +58,7 @@ const BASE_URL =
     : `http://${IOS_HOST}:${ODRD_PORT}`;
 
 // Update this with according your configuration sent to the backend/provider.
-const VEHICLE_ID = 'ADD_VEHICLE_ID_HERE';
+const VEHICLE_ID = ''; // ADD_VEHICLE_ID_HERE
 
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
   title: 'RN ODRD Sample',
@@ -71,20 +68,19 @@ const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
 
 const ridesharingDriverApi = new RidesharingDriverApi();
 
-function ODRDSampleApp(): JSX.Element {
+function ODRDSampleApp() {
   const { arePermissionsApproved } = usePermissions();
-  const [_navigationViewController, setNavigationViewController] =
-    useState<NavigationViewController | null>(null);
   const { navigationController, addListeners, removeListeners } =
     useNavigation();
 
   const [shouldShowControls, setShouldShowControls] = useState(false);
-  const [isAbnormalTerminationEnabled, setIsAbnormalTerminationEnabled] =
+  const [isAbnormalTerminationEnabled, setAbnormalTerminationEnabled] =
     useState(true);
   const [isVehicleStateOnline, setIsVehicleStateOnline] = useState(false);
-  const [isLocationTrackingEnabled, setIsLocationTrackingEnabled] =
+  const [isLocationTrackingEnabled, setLocationTrackingEnabled] =
     useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const [driverSdkVersion, setDriverSdkVersion] = useState<string>('');
 
   const clearInstance = useCallback(async () => {
     await ridesharingDriverApi.clearInstance();
@@ -165,6 +161,10 @@ function ODRDSampleApp(): JSX.Element {
     removeListeners(navigationCallbacks);
     addListeners(navigationCallbacks);
     fetchAuthToken();
+    ridesharingDriverApi
+      .getDriverSdkVersion()
+      .then(version => setDriverSdkVersion(version))
+      .catch(error => console.warn('Failed to get Driver SDK version', error));
 
     return () => {
       removeListeners(navigationCallbacks);
@@ -281,11 +281,10 @@ function ODRDSampleApp(): JSX.Element {
     onMapReady,
   };
 
-  const toggleLocationTrackingEnabled = () => {
-    const updatedValue = !isLocationTrackingEnabled;
-    setIsLocationTrackingEnabled(updatedValue);
+  const toggleLocationTrackingEnabled = (value: boolean) => {
+    setLocationTrackingEnabled(value);
 
-    if (updatedValue) {
+    if (value) {
       navigationController?.startUpdatingLocation();
     } else {
       navigationController?.stopUpdatingLocation();
@@ -293,131 +292,213 @@ function ODRDSampleApp(): JSX.Element {
 
     ridesharingDriverApi
       .getRidesharingVehicleReporter()
-      .setLocationTrackingEnabled(updatedValue);
+      .setLocationTrackingEnabled(value);
   };
 
-  const toggleVehicleState = () => {
-    const updatedValue = !isVehicleStateOnline;
-    setIsVehicleStateOnline(updatedValue);
+  const toggleVehicleState = (value: boolean) => {
+    setIsVehicleStateOnline(value);
 
     ridesharingDriverApi
       .getRidesharingVehicleReporter()
-      .setVehicleState(
-        updatedValue ? VehicleState.ONLINE : VehicleState.OFFLINE
-      );
+      .setVehicleState(value ? VehicleState.ONLINE : VehicleState.OFFLINE);
   };
 
-  const toggleAbnormalTerminationReporting = () => {
-    const updatedValue = !isAbnormalTerminationEnabled;
-    setIsAbnormalTerminationEnabled(updatedValue);
+  const toggleAbnormalTerminationReporting = (value: boolean) => {
+    setAbnormalTerminationEnabled(value);
 
-    ridesharingDriverApi.setAbnormalTerminationReportingEnabled(updatedValue);
+    ridesharingDriverApi.setAbnormalTerminationReportingEnabled(value);
   };
 
-  const buttonColor = Platform.OS === 'android' ? '#2196f3' : 'white';
-  const controlsButtonColor = Platform.OS === 'android' ? 'red' : 'white';
+  const buttonBackgroundColor = '#1976d2';
+  const buttonBackgroundColorPressed = '#105090ff';
+  const controlsButtonColor = '#d32f2f';
+  const controlsButtonColorPressed = '#a12020';
+
+  if (!VEHICLE_ID) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.alertContainer}>
+          <Text style={styles.alertTitle}>VEHICLE_ID Not Configured</Text>
+          <Text style={styles.alertMessage}>
+            Please set the VEHICLE_ID in App.tsx before running the app.
+          </Text>
+          <Text style={styles.alertInstructions}>
+            To configure:
+            {'\n'}1. Follow the setup instructions in the README
+            {'\n'}2. Create a vehicle using the backend POST request
+            {'\n'}3. Update VEHICLE_ID in example/ODRD/src/App.tsx
+            {'\n'}
+            {'\n'}See README.md for detailed instructions.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return !arePermissionsApproved ? (
-    <View style={[styles.container]}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Text style={styles.text}>Permissions not accepted</Text>
-    </View>
+    </SafeAreaView>
   ) : (
-    <View
-      style={[
-        styles.container,
-        {
-          flexDirection: 'column',
-        },
-      ]}
-    >
-      <View style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.mapContainer}>
         <NavigationView
-          style={{ height: Dimensions.get('window').height }}
+          style={styles.map}
           mapViewCallbacks={mapViewCallbacks}
-          onNavigationViewControllerCreated={setNavigationViewController}
+          onNavigationViewControllerCreated={() => {}}
           onMapViewControllerCreated={() => {}}
-          androidStylingOptions={{
-            primaryDayModeThemeColor: '#34eba8',
-            headerDistanceValueTextColor: '#76b5c5',
-            headerInstructionsFirstRowTextSize: '20f',
-          }}
-          iOSStylingOptions={{
-            navigationHeaderPrimaryBackgroundColor: '#34eba8',
-            navigationHeaderDistanceValueTextColor: '#76b5c5',
-          }}
         />
       </View>
-      <View style={{ flex: 2, margin: 20 }}>
-        {shouldShowControls ? (
-          <View style={{ backgroundColor: '#2196f3' }}>
-            <Button
-              title="Create Instance"
-              onPress={createInstance}
-              color={buttonColor}
-            />
-            <Button
-              title="Clear Instance"
-              onPress={clearInstance}
-              color={buttonColor}
-            />
-            <Button
-              title="Update time interval"
-              onPress={setUpdateInterval}
-              color={buttonColor}
-            />
-            <Button
-              title="Run navigation"
-              onPress={runNavigation}
-              color={buttonColor}
-            />
-            <Button
-              title="Get DriverSDK Version"
-              onPress={onGetDriverSDKVersionClick}
-              color={buttonColor}
-            />
-            <View style={styles.rowContainer}>
-              <Text style={styles.text}>Location Tracking</Text>
-              <Switch
-                value={isLocationTrackingEnabled}
-                onValueChange={() => {
-                  toggleLocationTrackingEnabled();
-                }}
-              />
+      <View style={styles.footerRow}>
+        <View style={styles.versionContainer}>
+          <Text
+            style={styles.versionText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            Vehicle ID: {VEHICLE_ID || 'Not set'}
+          </Text>
+          <Text
+            style={styles.versionText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            Driver SDK: {driverSdkVersion || '...'}
+          </Text>
+        </View>
+        <View style={styles.controlButton}>
+          <ActionButton
+            title="Show controls"
+            onPress={() => setShouldShowControls(true)}
+            backgroundColor={controlsButtonColor}
+            pressedBackgroundColor={controlsButtonColorPressed}
+          />
+        </View>
+      </View>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={shouldShowControls}
+        onRequestClose={closeDialog}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContent}>
+            <View style={styles.controlsCard}>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Create Instance"
+                  onPress={createInstance}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Clear Instance"
+                  onPress={clearInstance}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Update time interval"
+                  onPress={setUpdateInterval}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Run navigation"
+                  onPress={runNavigation}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Get DriverSDK Version"
+                  onPress={onGetDriverSDKVersionClick}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
+              <View style={styles.rowContainer}>
+                <Text style={styles.text}>Location Tracking</Text>
+
+                {isLocationTrackingEnabled ? (
+                  <ActionButton
+                    title="Disable"
+                    onPress={() => toggleLocationTrackingEnabled(false)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                ) : (
+                  <ActionButton
+                    title="Enable"
+                    onPress={() => toggleLocationTrackingEnabled(true)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                )}
+              </View>
+              <View style={styles.rowContainer}>
+                <Text style={styles.text}>Vehicle Online State</Text>
+
+                {isVehicleStateOnline ? (
+                  <ActionButton
+                    title="Disable"
+                    onPress={() => toggleVehicleState(false)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                ) : (
+                  <ActionButton
+                    title="Enable"
+                    onPress={() => toggleVehicleState(true)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                )}
+              </View>
+              <View style={styles.rowContainer}>
+                <Text style={styles.text}>Abnormal Termination Reporting</Text>
+
+                {isAbnormalTerminationEnabled ? (
+                  <ActionButton
+                    title="Disable"
+                    onPress={() => toggleAbnormalTerminationReporting(false)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                ) : (
+                  <ActionButton
+                    title="Enable"
+                    onPress={() => toggleAbnormalTerminationReporting(true)}
+                    backgroundColor={buttonBackgroundColor}
+                    pressedBackgroundColor={buttonBackgroundColorPressed}
+                  />
+                )}
+              </View>
+              <View style={styles.buttonWrapper}>
+                <ActionButton
+                  title="Close"
+                  onPress={closeDialog}
+                  backgroundColor={buttonBackgroundColor}
+                  pressedBackgroundColor={buttonBackgroundColorPressed}
+                />
+              </View>
             </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.text}>Vehicle Online State</Text>
-              <Switch
-                value={isVehicleStateOnline}
-                onValueChange={() => {
-                  toggleVehicleState();
-                }}
-              />
-            </View>
-            <View style={styles.rowContainer}>
-              <Text style={styles.text}>Abnormal Termination Reporting</Text>
-              <Switch
-                value={isAbnormalTerminationEnabled}
-                onValueChange={() => {
-                  toggleAbnormalTerminationReporting();
-                }}
-              />
-            </View>
-            <Button title="Close" onPress={closeDialog} color={buttonColor} />
           </View>
-        ) : null}
-      </View>
-      <View style={styles.controlButton}>
-        <Button
-          title="Show controls"
-          onPress={() => setShouldShowControls(!shouldShowControls)}
-          color={controlsButtonColor}
-        />
-      </View>
-    </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
-function App(): JSX.Element {
+function App() {
   return (
     <NavigationProvider
       termsAndConditionsDialogOptions={termsAndConditionsDialogOptions}
@@ -427,30 +508,155 @@ function App(): JSX.Element {
   );
 }
 
-export default App;
+type ActionButtonProps = {
+  title: string;
+  onPress: () => void;
+  backgroundColor?: string;
+  pressedBackgroundColor?: string;
+};
+
+const ActionButton = ({
+  title,
+  onPress,
+  backgroundColor,
+  pressedBackgroundColor: pressedColor,
+}: ActionButtonProps) => {
+  const resolvedBackground = backgroundColor ?? '#1976d2';
+  const resolvedPressed = pressedColor ?? resolvedBackground;
+  const resolvedTextColor =
+    resolvedBackground.toLowerCase() === '#ffffff' ? '#0b1a2a' : '#ffffff';
+
+  return (
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: 'rgba(0,0,0,0.15)', foreground: true }}
+      style={({ pressed }) => [
+        styles.buttonBase,
+        { backgroundColor: pressed ? resolvedPressed : resolvedBackground },
+        resolvedBackground.toLowerCase() === '#ffffff' &&
+          styles.buttonOutlineLight,
+      ]}
+    >
+      <Text style={[styles.buttonText, { color: resolvedTextColor }]}>
+        {title}
+      </Text>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f2f4f8',
+  },
+  alertContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  alertTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#d32f2f',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  alertMessage: {
+    fontSize: 16,
+    color: '#0b1a2a',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  alertInstructions: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 22,
+    textAlign: 'left',
+  },
+  mapContainer: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    overflow: 'hidden',
+    elevation: 3,
+    marginBottom: 12,
+  },
+  map: {
+    flex: 1,
+    minHeight: 300,
   },
   rowContainer: {
     flexDirection: 'row',
-    alignSelf: 'flex-end',
     alignItems: 'center',
-    paddingBottom: 5,
-    paddingTop: 5,
-    paddingRight: 20,
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginVertical: 4,
+    alignSelf: 'stretch',
+  },
+  controlsCard: {
+    backgroundColor: '#f0f4ff',
+    padding: 12,
+    borderRadius: 10,
+    alignSelf: 'stretch',
+  },
+  buttonWrapper: {
+    marginVertical: 6,
   },
   controlButton: {
-    backgroundColor: 'red',
     alignSelf: 'flex-end',
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginRight: 30,
+    marginBottom: 16,
   },
   text: {
-    color: 'white',
+    color: '#0b1a2a',
     paddingRight: 10,
     paddingLeft: 10,
+    flexShrink: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  modalContent: {
+    backgroundColor: '#f2f4f8',
+    borderRadius: 12,
+    padding: 12,
+    maxHeight: '85%',
+  },
+  buttonBase: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontWeight: '600',
+  },
+  buttonOutlineLight: {
+    borderWidth: 1,
+    borderColor: '#d32f2f',
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  versionContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  versionText: {
+    color: '#0b1a2a',
+    fontWeight: '600',
   },
 });
+
+export default App;

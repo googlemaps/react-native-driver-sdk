@@ -44,7 +44,7 @@ export class RidesharingDriverApi extends DriverApi {
     vehicleId: string,
     onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
-  ) {
+  ): Promise<void> {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 
