@@ -193,8 +193,10 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
           }
 
           public void onFailure(@NonNull Throwable thrown) {
-            // TODO: Expose proper gRPC Error code to RN.
-            promise.reject(thrown);
+            promise.reject(
+                JsErrors.GET_DELIVERY_VEHICLE_ERROR_CODE,
+                JsErrors.GET_DELIVERY_VEHICLE_ERROR_MESSAGE,
+                thrown);
           }
         },
         // causes the callbacks to be executed on the main (UI) thread

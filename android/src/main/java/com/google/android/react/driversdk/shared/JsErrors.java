@@ -43,4 +43,8 @@ public class JsErrors {
   public static final String DRIVER_API_NOT_INITIALIZED_CODE = "DRIVER_API_NOT_INITIALIZED_CODE";
   public static final String DRIVER_API_NOT_INITIALIZED_MESSAGE =
       "Driver API has not been initialized.";
+
+  public static final String GET_DELIVERY_VEHICLE_ERROR_CODE = "GET_DELIVERY_VEHICLE_ERROR_CODE";
+  public static final String GET_DELIVERY_VEHICLE_ERROR_MESSAGE =
+      "Failed to retrieve delivery vehicle information.";
 }

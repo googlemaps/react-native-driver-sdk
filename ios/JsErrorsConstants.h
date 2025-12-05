@@ -22,5 +22,5 @@ extern NSString* const kDriverApiAlreadyExistsErrorCode;
 extern NSString* const kDriverApiAlreadyExistsErrorMessage;
 extern NSString* const kNavigatorNotInitializedErrorCode;
 extern NSString* const kNavigatorNotInitializedErrorMessage;
-extern NSString* const kDriverApiFailedToGetDeliveryVehicleCode;
-extern NSString* const kDriverApiFailedToGetDeliveryVehicleMessage;
+extern NSString* const kGetDeliveryVehicleErrorCode;
+extern NSString* const kGetDeliveryVehicleErrorMessage;
