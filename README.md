@@ -8,19 +8,31 @@ If your billing address is in the European Economic Area, effective on 8 July 20
 
 This is the beta release of the Google Driver SDK package for React Native. It is an early look at the package and is intended for testing and feedback collection. The functionalities and APIs in this version are subject to change.
 
+> [!NOTE]
+> This package is in Beta until it reaches version 1.0. According to [semantic versioning](https://semver.org/#spec-item-4), breaking changes may be introduced before 1.0.
+
 ## Requirements
 
 |                                 | Android | iOS       |
 | ------------------------------- | ------- | --------- |
-| **Minimum mobile OS supported** | SDK 23+ | iOS 16.0+ |
+| **Minimum mobile OS supported** | SDK 24+ | iOS 16.0+ |
 
 * A React Native project
-* A Google Cloud project with the [Navigation SDK enabled](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project) and the [Maps SDK for iOS enabled](https://developers.google.com/maps/documentation/navigation/ios-sdk/config)
-* An API key from the project above
+* A Google Cloud project
+  *  If you are a Mobility Services developer, you must contact Sales as described in [Mobility services documentation](https://developers.google.com/maps/documentation/transportation-logistics/mobility).
+  *  If you are not a Mobility Services developer, refer to [Setup Google Cloud Project](https://developers.google.com/maps/documentation/navigation/android-sdk/cloud-setup) for instructions.
+* An [API key](https://console.cloud.google.com/google/maps-apis/credentials) from the project above
+  * The API key must be configured for both Android and iOS. Refer to [Android Using Api Keys](https://developers.google.com/maps/documentation/navigation/android-sdk/get-api-key) and [iOS Using Api Keys](https://developers.google.com/maps/documentation/navigation/ios-sdk/get-api-key) respectively for instructions.
 * If targeting Android, [Google Play Services](https://developers.google.com/android/guides/overview) installed and enabled
-* [Attributions and licensing text](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project#include_the_required_attributions_in_your_app) added to your app.
-* Install the [react-native-navigation-sdk](https://github.com/googlemaps/react-native-navigation-sdk) library on your application and set up a `NavigationView`.
+* [Attributions and licensing text](https://developers.google.com/maps/documentation/navigation/android-sdk/set-up-project#include_the_required_attributions_in_your_app) added to your app
 
+> [!IMPORTANT]
+> [Apply API restrictions](https://developers.google.com/maps/api-security-best-practices#api-restriction) to the API key to limit usage to "Navigation SDK, "Maps SDK for Android", and "Maps SDK for iOS" for enhanced security and cost management. This helps guard against unauthorized use of your API key.
+
+## React Native Compatibility
+
+> [!IMPORTANT]
+> This package does not yet support React Native's new architecture. Make sure the new architecture is disabled in your project configuration as shown in the [Installation](#installation) section.
 
 ## Installation
 
@@ -48,41 +60,88 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 
 ### Android
 
-1. Set the `minSdkVersion` in `android/app/build.gradle`:
+
+#### Disable new architecture
+
+This package does not yet support new architecture. Make sure new architecture is disabled in your `android/gradle.properties` file:
+
+```groovy
+newArchEnabled=false
+```
+
+#### Enable Jetifier
+
+To ensure compatibility with AndroidX, enable Jetifier in your `android/gradle.properties` file:
+
+```groovy
+# Automatically convert third-party libraries to use AndroidX
+android.enableJetifier=true
+```
+
+#### Enable Core Library Desugaring
+
+Core library desugaring **must be enabled** for your Android project, regardless of your minSdkVersion.
+
+To enable desugaring, update your `android/app/build.gradle` file:
+
+```groovy
+android {
+    ...
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        ...
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.4'
+}
+```
+
+#### Minimum SDK Requirements for Android
+
+The `minSdkVersion` for your Android project must be set to 24 or higher in `android/app/build.gradle`:
 
 ```groovy
 android {
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion 24
     }
 }
 ```
 
-2. **Enable Core Library Desugaring**
+#### Set Google Maps API Key
 
-   Core library desugaring **must be enabled** for your Android project, regardless of your minSdkVersion.
+To securely store your API key, it is recommended to use the [Google Maps Secrets Gradle Plugin](https://developers.google.com/maps/documentation/android-sdk/secrets-gradle-plugin). This plugin helps manage API keys without exposing them in your app's source code.
 
-   To enable desugaring, update your `android/app/build.gradle` file:
-
-   ```groovy
-   android {
-       ...
-       compileOptions {
-           coreLibraryDesugaringEnabled true
-           ...
-       }
-   }
-
-   dependencies {
-       coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.4'
-   }
-   ```
+See example configuration for secrets plugin at example applications [build.gradle](./example/android/app/build.gradle) file.
 
 ### iOS
 
-1. Set the iOS version in your application PodFile.
+#### Disable new architecture
 
-   `platform: ios, '16.0'`
+This package does not yet support new architecture. Make sure new architecture is disabled in your `ios/Podfile`:
+
+```ruby
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+```
+
+#### Set Google Maps API Key
+
+To set up, specify your API key in the application delegate `ios/Runner/AppDelegate.m`:
+
+```objective-c
+#import <GoogleMaps/GoogleMaps.h>
+
+@implementation AppDelegate
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  [GMSServices provideAPIKey:@"API_KEY"];
+  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+```
 
 ## Usage
 
@@ -274,9 +333,9 @@ See the [Contributing guide](./CONTRIBUTING.md).
 
 ## Terms of Service
 
-This package uses Google Maps Platform services, and any use of Google Maps Platform is subject to the [Terms of Service](https://cloud.google.com/maps-platform/terms).
+This library uses Google Maps Platform services. Use of Google Maps Platform services through this library is subject to the [Google Maps Platform Terms of Service](https://cloud.google.com/maps-platform/terms).
 
-For clarity, this package, and each underlying component, is not a Google Maps Platform Core Service.
+This library is not a Google Maps Platform Core Service. Therefore, the Google Maps Platform Terms of Service (e.g. Technical Support Services, Service Level Agreements, and Deprecation Policy) do not apply to the code in this library.
 
 ## Support
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import DeliveryDriverApi from '../deliveryDriverApi';
+import { DeliveryDriverApi } from '../deliveryDriverApi';
 
 const deliveryDriver = new DeliveryDriverApi();
 

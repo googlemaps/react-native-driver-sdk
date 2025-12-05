@@ -39,6 +39,8 @@
 	<string>[Enter any description related to the key]</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Enter any description related to the key</string>
+	<key>RCTNewArchEnabled</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

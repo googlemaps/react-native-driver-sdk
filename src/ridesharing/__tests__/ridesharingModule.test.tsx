@@ -15,7 +15,7 @@
  */
 
 import { VehicleState } from '../../shared/types';
-import RidesharingDriverApi from '../ridesharingDriverApi';
+import { RidesharingDriverApi } from '../ridesharingDriverApi';
 
 const ridesharing = new RidesharingDriverApi();
 

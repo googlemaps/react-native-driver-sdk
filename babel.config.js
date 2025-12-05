@@ -13,7 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 module.exports = {
-  presets: ['module:@react-native/babel-preset'],
+  overrides: [
+    {
+      exclude: /\/node_modules\//,
+      presets: ['module:react-native-builder-bob/babel-preset'],
+    },
+    {
+      include: /\/node_modules\//,
+      presets: ['module:@react-native/babel-preset'],
+    },
+  ],
 };

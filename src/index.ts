@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-export * from './driverHelper';
 export * from './delivery';
 export * from './ridesharing';
 export * from './shared';

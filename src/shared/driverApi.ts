@@ -1,5 +1,3 @@
-/* eslint-disable valid-jsdoc */
-/* eslint-disable require-jsdoc */
 /**
  * Copyright 2024 Google LLC
  *
@@ -15,18 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeEventEmitter, NativeModules } from 'react-native';
 import type {
   OnGetTokenCallback,
   OnStatusUpdateCallback,
   VehicleReporterListener,
+  VehicleUpdate,
+  VehicleUpdateError,
 } from './types';
 
 export const STATUS_UPDATE_EVENT_TYPE = 'updateStatus';
 export const VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE = 'didSucceedVehicleUpdate';
 export const VEHICLE_REPORTER_FAILED_UPDATE_TYPE = 'didFailVehicleUpdate';
 
+type StatusUpdateEvent = {
+  statusLevel: string;
+  statusCode: string;
+  statusMsg: string;
+};
+
+type VehicleReporterSuccessEvent = {
+  vehicleUpdate: VehicleUpdate;
+};
+
+type VehicleReporterFailureEvent = {
+  vehicleUpdate: VehicleUpdate;
+  error: VehicleUpdateError;
+};
+
 const TOKEN_UPDATE_INTERVAL_SECONDS = 10;
+
+type DriverEventDispatcherModule = {
+  addListener: (eventType: string) => void;
+  removeListeners: (count: number) => void;
+};
 
 export abstract class DriverApi {
   nativeModule: typeof NativeModules;
@@ -34,6 +54,14 @@ export abstract class DriverApi {
   vehicleId?: string;
   isLocationTrackingEnabled: boolean = false;
   fetchTokenTimeoutId?: ReturnType<typeof setTimeout>;
+
+  private createEventEmitter = (): NativeEventEmitter => {
+    const driverEventDispatcher = (
+      NativeModules as Record<string, DriverEventDispatcherModule | undefined>
+    ).DriverEventDispatcher;
+
+    return new NativeEventEmitter(driverEventDispatcher ?? null);
+  };
 
   constructor(nativeModule: typeof NativeModules) {
     this.nativeModule = nativeModule;
@@ -57,20 +85,18 @@ export abstract class DriverApi {
   protected initializeEventEmitter = (
     _onGetToken: OnGetTokenCallback, // TODO(jokerttu): consider removing or implementing this parameter
     onStatusUpdate?: OnStatusUpdateCallback
-  ) => {
-    const eventEmitter = new NativeEventEmitter(
-      NativeModules.DriverEventDispatcher
-    );
+  ): void => {
+    const eventEmitter = this.createEventEmitter();
 
     // Allow a single active listener.
     eventEmitter.removeAllListeners(STATUS_UPDATE_EVENT_TYPE);
 
     if (onStatusUpdate) {
       eventEmitter.addListener(STATUS_UPDATE_EVENT_TYPE, event => {
-        if (event) {
-          const { statusLevel, statusCode, statusMsg } = event;
-          onStatusUpdate(statusLevel, statusCode, statusMsg);
-        }
+        const payload = event as StatusUpdateEvent | undefined;
+        if (!payload) return;
+        const { statusLevel, statusCode, statusMsg } = payload;
+        onStatusUpdate(statusLevel, statusCode, statusMsg);
       });
     }
   };
@@ -82,9 +108,7 @@ export abstract class DriverApi {
   clearInstance = (): Promise<void> => {
     clearTimeout(this.fetchTokenTimeoutId);
 
-    const eventEmitter = new NativeEventEmitter(
-      NativeModules.DriverEventDispatcher
-    );
+    const eventEmitter = this.createEventEmitter();
 
     // Allow a single active listener.
     eventEmitter.removeAllListeners(STATUS_UPDATE_EVENT_TYPE);
@@ -99,8 +123,12 @@ export abstract class DriverApi {
    *
    * @param enabled - whether abnormal SDK terminations should be reported.
    */
-  setAbnormalTerminationReportingEnabled = (isEnabled: boolean) => {
-    return this.nativeModule.setAbnormalTerminationReporting(isEnabled);
+  setAbnormalTerminationReportingEnabled = (
+    isEnabled: boolean
+  ): Promise<void> => {
+    return this.nativeModule.setAbnormalTerminationReporting(
+      isEnabled
+    ) as Promise<void>;
   };
 
   /**
@@ -110,7 +138,9 @@ export abstract class DriverApi {
     return this.nativeModule.getDriverSdkVersion();
   };
 
-  protected setLocationTrackingEnabled = async (isEnabled: boolean) => {
+  protected setLocationTrackingEnabled = async (
+    isEnabled: boolean
+  ): Promise<void> => {
     this.isLocationTrackingEnabled = isEnabled;
 
     if (isEnabled) {
@@ -122,7 +152,7 @@ export abstract class DriverApi {
     await this.nativeModule.setLocationTrackingEnabled(isEnabled);
   };
 
-  protected pollAuthToken = () => {
+  protected pollAuthToken = (): void => {
     this.fetchTokenTimeoutId = setTimeout(async () => {
       await this.fetchAndSetToken();
 
@@ -134,28 +164,28 @@ export abstract class DriverApi {
 
   protected setVehicleReporterListener = (
     listener: VehicleReporterListener
-  ) => {
-    const eventEmitter = new NativeEventEmitter(
-      NativeModules.DriverEventDispatcher
-    );
+  ): void => {
+    const eventEmitter = this.createEventEmitter();
 
     eventEmitter.removeAllListeners(VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE);
     eventEmitter.removeAllListeners(VEHICLE_REPORTER_FAILED_UPDATE_TYPE);
 
     eventEmitter.addListener(VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE, event => {
-      if (event && listener.onVehicleUpdateSucceed) {
-        listener.onVehicleUpdateSucceed(event.vehicleUpdate);
+      const payload = event as VehicleReporterSuccessEvent | undefined;
+      if (payload && listener.onVehicleUpdateSucceed) {
+        listener.onVehicleUpdateSucceed(payload.vehicleUpdate);
       }
     });
 
     eventEmitter.addListener(VEHICLE_REPORTER_FAILED_UPDATE_TYPE, event => {
-      if (event && listener.onVehicleUpdateFailed) {
-        listener.onVehicleUpdateFailed(event.vehicleUpdate, event.error);
+      const payload = event as VehicleReporterFailureEvent | undefined;
+      if (payload && listener.onVehicleUpdateFailed) {
+        listener.onVehicleUpdateFailed(payload.vehicleUpdate, payload.error);
       }
     });
   };
 
-  protected fetchAndSetToken = async () => {
+  protected fetchAndSetToken = async (): Promise<void> => {
     if (this.onGetTokenCallback == null) {
       return;
     }

@@ -39,6 +39,7 @@ Keys.plist
 .idea
 .project
 .settings
+.kotlin
 local.properties
 android.iml
 
@@ -46,6 +47,10 @@ android.iml
 #
 example/**/ios/Pods
 example/**/ios/Podfile.lock
+
+# Ruby
+example/**/vendor/
+Gemfile.lock
 
 # node.js
 #

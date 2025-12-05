@@ -12,12 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: release-please
+## Runs the release-please action for all new pushes to the main branch.
+##   This will create new release-PRs, create GitHub releases,
+##   and update the CHANGELOG.md.
+
+name: Release Please
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +35,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@d1a8f221d7723166f48a584aebba00ef3f6febec
+      - id: release
+        name: Release Please
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.SYNCED_GITHUB_TOKEN_REPO }}

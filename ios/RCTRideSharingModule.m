@@ -16,7 +16,7 @@
 
 #import "RCTRideSharingModule.h"
 #import <React/RCTUIManager.h>
-#import <react-native-navigation-sdk/NavModule.h>
+#import <ReactNativeGoogleMapsNavigation/NavModule.h>
 
 @implementation RCTRideSharingModule
 

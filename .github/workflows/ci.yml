@@ -232,7 +232,8 @@ jobs:
           yarn turbo run build:android:odrd --cache-dir="${{ env.TURBO_CACHE_DIR }}"
 
   build-ios-lmfs:
-    runs-on: macos-14
+    runs-on:
+      labels: macos-latest-xlarge
     timeout-minutes: 45
     env:
       TURBO_CACHE_DIR: .turbo/ios
@@ -288,7 +289,8 @@ jobs:
           yarn turbo run build:ios:lmfs --cache-dir="${{ env.TURBO_CACHE_DIR }}"
 
   build-ios-odrd:
-    runs-on: macos-14
+    runs-on:
+      labels: macos-latest-xlarge
     timeout-minutes: 45
     env:
       TURBO_CACHE_DIR: .turbo/ios
