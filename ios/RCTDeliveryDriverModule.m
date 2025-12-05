@@ -20,7 +20,7 @@
 
 @implementation RCTDeliveryDriverModule
 
-RCT_EXPORT_MODULE(RCTDeliveryDriverModule);
+RCT_EXPORT_MODULE(DeliveryDriverModule);
 
 @synthesize bridge = _bridge;
 

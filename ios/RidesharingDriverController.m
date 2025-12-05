@@ -44,6 +44,7 @@ DriverEventDispatcher *driverEventDispatch;
   _rideSharingDriverAPI =
       [[GMTDRidesharingDriverAPI alloc] initWithDriverContext:_rideSharingDriverContext];
   driverEventDispatch = [DriverEventDispatcher allocWithZone:nil];
+  [driverEventDispatch startObserving];  // Enable event emission
 
   _ridesharingVehicleReporter = _rideSharingDriverAPI.vehicleReporter;
   [_ridesharingVehicleReporter addListener:self];

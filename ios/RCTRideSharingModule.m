@@ -20,7 +20,7 @@
 
 @implementation RCTRideSharingModule
 
-RCT_EXPORT_MODULE(RCTRideSharingModule);
+RCT_EXPORT_MODULE(RideSharingModule);
 
 @synthesize bridge = _bridge;
 

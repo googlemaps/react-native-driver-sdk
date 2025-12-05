@@ -51,6 +51,7 @@ DriverEventDispatcher *lmfsEventDispatch;
   [_deliverySession.roadSnappedLocationProvider addListener:_vehicleReporter];
 
   lmfsEventDispatch = [DriverEventDispatcher allocWithZone:nil];
+  [lmfsEventDispatch startObserving];  // Enable event emission
 }
 
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled {
