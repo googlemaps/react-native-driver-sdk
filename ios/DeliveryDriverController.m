@@ -81,8 +81,7 @@ DriverEventDispatcher *lmfsEventDispatch;
   [_driverAPI.deliveryVehicleManager
       getVehicleWithCompletion:^(GMTDDeliveryVehicle *_Nullable vehicle, NSError *_Nullable error) {
         if (error != nil || vehicle == nil) {
-          reject(kGetDeliveryVehicleErrorCode,
-                 kGetDeliveryVehicleErrorMessage, error);
+          reject(kGetDeliveryVehicleErrorCode, kGetDeliveryVehicleErrorMessage, error);
           return;
         }
 
