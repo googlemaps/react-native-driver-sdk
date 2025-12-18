@@ -64,6 +64,9 @@ const BASE_URL =
 // See README.md for configuration options.
 const VEHICLE_ID_DEFAULT = ODRD_VEHICLE_ID || ''; // ADD_VEHICLE_ID_HERE
 
+// New location reporting interval in seconds that is applied via menu action.
+const NEW_LOCATION_REPORTING_INTERVAL_SECONDS = 20;
+
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
   title: 'RN ODRD Sample',
   companyName: 'Sample Company',
@@ -251,11 +254,14 @@ function ODRDSampleApp() {
     }
   };
 
-  const setUpdateInterval = async () => {
+  const setLocationReportingInterval = async () => {
     try {
       await ridesharingDriverApi
         .getRidesharingVehicleReporter()
-        .setLocationReportingInterval(20);
+        .setLocationReportingInterval(NEW_LOCATION_REPORTING_INTERVAL_SECONDS);
+      console.log(
+        `Location reporting interval set to ${NEW_LOCATION_REPORTING_INTERVAL_SECONDS} seconds`
+      );
     } catch (e) {
       console.error(e);
     }
@@ -460,8 +466,8 @@ function ODRDSampleApp() {
               </View>
               <View style={styles.buttonWrapper}>
                 <ActionButton
-                  title="Update time interval"
-                  onPress={setUpdateInterval}
+                  title={`Set Location Reporting Interval to ${NEW_LOCATION_REPORTING_INTERVAL_SECONDS}s`}
+                  onPress={setLocationReportingInterval}
                   backgroundColor={buttonBackgroundColor}
                   pressedBackgroundColor={buttonBackgroundColorPressed}
                 />

@@ -15,7 +15,8 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 
 |                                 | Android | iOS       |
 | ------------------------------- | ------- | --------- |
-| **Minimum mobile OS supported** | SDK 24+ | iOS 16.0+ |
+| **Minimum mobile OS supported** | SDK 26+ | iOS 16.0+ |
+| **Compile/Target SDK**          | SDK 36+ | -         |
 
 * A React Native project
 * A Google Cloud project
@@ -100,15 +101,17 @@ dependencies {
 
 #### Minimum SDK Requirements for Android
 
-The `minSdkVersion` for your Android project must be set to 24 or higher in `android/app/build.gradle`:
+The `minSdkVersion` for your Android project must be set to 26 or higher in `android/app/build.gradle`:
 
 ```groovy
 android {
     defaultConfig {
-        minSdkVersion 24
+        minSdkVersion 26
     }
 }
 ```
+
+The `compileSdkVersion` and `targetSdkVersion` should be set to 36 or higher.
 
 #### Set Google Maps API Key
 
