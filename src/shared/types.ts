@@ -53,7 +53,7 @@ export interface VehicleReporter {
 
   /**
    * Allows setting a listener for reporting updates. This is only
-   * available for iOS. For Android, please use {@code UpdateStatusListener}.
+   * available for iOS. For Android, please use {@link OnStatusUpdateCallback}.
    * @param listener
    */
   setListener(listener: VehicleReporterListener): void;
