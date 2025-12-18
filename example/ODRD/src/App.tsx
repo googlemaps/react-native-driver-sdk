@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
+  TextInput,
   View,
   Platform,
   Modal,
@@ -48,6 +49,7 @@ import {
   ANDROID_HOST,
   IOS_HOST,
   ODRD_PORT,
+  ODRD_VEHICLE_ID,
 } from '@env';
 import usePermissions from './checkPermissions';
 
@@ -58,7 +60,9 @@ const BASE_URL =
     : `http://${IOS_HOST}:${ODRD_PORT}`;
 
 // Update this with according your configuration sent to the backend/provider.
-const VEHICLE_ID = ''; // ADD_VEHICLE_ID_HERE
+// Can also be set via ODRD_VEHICLE_ID in .env file or as environment variable:
+// See README.md for configuration options.
+const VEHICLE_ID_DEFAULT = ODRD_VEHICLE_ID || ''; // ADD_VEHICLE_ID_HERE
 
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
   title: 'RN ODRD Sample',
@@ -81,6 +85,9 @@ function ODRDSampleApp() {
     useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [driverSdkVersion, setDriverSdkVersion] = useState<string>('');
+  const [vehicleId, setVehicleId] = useState<string>(VEHICLE_ID_DEFAULT);
+  const [tempVehicleId, setTempVehicleId] =
+    useState<string>(VEHICLE_ID_DEFAULT);
 
   const clearInstance = useCallback(async () => {
     await ridesharingDriverApi.clearInstance();
@@ -157,6 +164,11 @@ function ODRDSampleApp() {
   );
 
   useEffect(() => {
+    if (!vehicleId) {
+      console.log('Vehicle ID not set, skipping initialization');
+      return;
+    }
+
     console.log('Init ODRD Example app');
     removeListeners(navigationCallbacks);
     addListeners(navigationCallbacks);
@@ -170,12 +182,22 @@ function ODRDSampleApp() {
       removeListeners(navigationCallbacks);
       clearInstance();
     };
-  }, [clearInstance, navigationCallbacks, addListeners, removeListeners]);
+  }, [
+    clearInstance,
+    navigationCallbacks,
+    addListeners,
+    removeListeners,
+    vehicleId,
+  ]);
 
   const fetchAuthToken = async () => {
+    if (!vehicleId) {
+      console.log('Vehicle ID not set, skipping auth token fetch');
+      return;
+    }
     try {
       console.log('Fetching auth token...');
-      const tokenUrl = BASE_URL + '/token/driver/' + VEHICLE_ID;
+      const tokenUrl = BASE_URL + '/token/driver/' + vehicleId;
       const response = await fetch(tokenUrl);
       const token = await response.json();
       console.log('Got token:', token);
@@ -194,7 +216,7 @@ function ODRDSampleApp() {
       console.log('Creating ODRD instance');
       await ridesharingDriverApi.initialize(
         PROVIDER_ID,
-        VEHICLE_ID,
+        vehicleId,
         _tokenContext => {
           console.log('onGetToken call, return token: ', authToken);
           // Check if the token is expired, in such case request a new one.
@@ -314,19 +336,54 @@ function ODRDSampleApp() {
   const controlsButtonColor = '#d32f2f';
   const controlsButtonColorPressed = '#a12020';
 
-  if (!VEHICLE_ID) {
+  const handleSetVehicleId = () => {
+    if (tempVehicleId.trim()) {
+      setVehicleId(tempVehicleId.trim());
+    }
+  };
+
+  if (!vehicleId) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.alertContainer}>
           <Text style={styles.alertTitle}>VEHICLE_ID Not Configured</Text>
           <Text style={styles.alertMessage}>
-            Please set the VEHICLE_ID in App.tsx before running the app.
+            Please set the VEHICLE_ID to continue.
           </Text>
           <Text style={styles.alertInstructions}>
-            To configure:
-            {'\n'}1. Follow the setup instructions in the README
-            {'\n'}2. Create a vehicle using the backend POST request
-            {'\n'}3. Update VEHICLE_ID in example/ODRD/src/App.tsx
+            You can configure the vehicle ID in one of three ways:
+            {'\n'}
+            {'\n'}1. Add it to your .env file:
+            {'\n'} ODRD_VEHICLE_ID=your_vehicle_id
+            {'\n'}
+            {'\n'}2. Enter it directly below:
+          </Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Vehicle ID"
+              placeholderTextColor="#999"
+              value={tempVehicleId}
+              onChangeText={setTempVehicleId}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <View style={styles.buttonWrapper}>
+              <ActionButton
+                title="Set Vehicle ID"
+                onPress={handleSetVehicleId}
+                backgroundColor={buttonBackgroundColor}
+                pressedBackgroundColor={buttonBackgroundColorPressed}
+              />
+            </View>
+          </View>
+          <Text style={styles.alertInstructions}>
+            {'\n'}3. Update VEHICLE_ID_DEFAULT in example/ODRD/src/App.tsx
+            {'\n'}
+            {'\n'}To create a vehicle:
+            {'\n'}• Follow the setup instructions in the README
+            {'\n'}• Create a vehicle using the backend POST request
+            {'\n'}• Use the vehicle ID from the response
             {'\n'}
             {'\n'}See README.md for detailed instructions.
           </Text>
@@ -356,7 +413,7 @@ function ODRDSampleApp() {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            Vehicle ID: {VEHICLE_ID || 'Not set'}
+            Vehicle ID: {vehicleId || 'Not set'}
           </Text>
           <Text
             style={styles.versionText}
@@ -656,6 +713,22 @@ const styles = StyleSheet.create({
   versionText: {
     color: '#0b1a2a',
     fontWeight: '600',
+  },
+  inputContainer: {
+    marginVertical: 16,
+    width: '100%',
+    maxWidth: 400,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#0b1a2a',
+    marginBottom: 12,
   },
 });
 

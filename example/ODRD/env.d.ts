@@ -19,4 +19,5 @@ declare module '@env' {
   export const ANDROID_HOST: string;
   export const IOS_HOST: string;
   export const ODRD_PORT: number;
+  export const ODRD_VEHICLE_ID: string;
 }
