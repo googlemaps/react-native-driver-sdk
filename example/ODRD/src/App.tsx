@@ -156,6 +156,27 @@ function ODRDSampleApp() {
     [navigationController]
   );
 
+  const fetchAuthToken = useCallback(async () => {
+    if (!vehicleId) {
+      console.log('Vehicle ID not set, skipping auth token fetch');
+      return;
+    }
+    try {
+      console.log('Fetching auth token...');
+      const tokenUrl = BASE_URL + '/token/driver/' + vehicleId;
+      const response = await fetch(tokenUrl);
+      const token = await response.json();
+      console.log('Got token:', token);
+
+      setAuthToken(token.jwt);
+    } catch (error) {
+      console.log(
+        'There has been a problem connecting to the provider, please make sure it is running. ',
+        error
+      );
+    }
+  }, [vehicleId]);
+
   const navigationCallbacks: NavigationCallbacks = useMemo(
     () => ({
       onArrival,
@@ -191,28 +212,8 @@ function ODRDSampleApp() {
     addListeners,
     removeListeners,
     vehicleId,
+    fetchAuthToken,
   ]);
-
-  const fetchAuthToken = async () => {
-    if (!vehicleId) {
-      console.log('Vehicle ID not set, skipping auth token fetch');
-      return;
-    }
-    try {
-      console.log('Fetching auth token...');
-      const tokenUrl = BASE_URL + '/token/driver/' + vehicleId;
-      const response = await fetch(tokenUrl);
-      const token = await response.json();
-      console.log('Got token:', token);
-
-      setAuthToken(token.jwt);
-    } catch (error) {
-      console.log(
-        'There has been a problem connecting to the provider, please make sure it is running. ',
-        error
-      );
-    }
-  };
 
   const createInstance = async () => {
     try {
