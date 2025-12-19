@@ -5,7 +5,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* upgrade Android Driver SDK to version 7.0.0 ([#75](https://github.com/googlemaps/react-native-driver-sdk/issues/75))
+* Upgrades Android minSdkVersion to 26 and targetSdkVersion to 36 ([#75](https://github.com/googlemaps/react-native-driver-sdk/issues/75))
 * getDeliveryVehicle error code updated to GET_DELIVERY_VEHICLE_ERROR_CODE
 * See navigation SDK v0.12.0 release notes: https://github.com/googlemaps/react-native-navigation-sdk/releases/tag/v0.12.0
 
