@@ -8,7 +8,13 @@ This is a sample application that show cases developers how to integrate with th
 
 1. This library depends on the LMFS backend available in https://github.com/googlemaps/last-mile-fleet-solution-samples/tree/main/backend. This package provides docker-compose files to run the backend services at `/example/tools/backend` folder. For more information, please refer to the [README](../tools/backend/README.md) file in the tools/backend folder of the example app.
 2. Once the backend is setup, create a delivery vehicle and keep the vehicleId handy. In order to make it easier to create vehicles with tasks, you can use the `/upload-delivery-config.html` endpoint on the backend. [example json](https://raw.githubusercontent.com/googlemaps/last-mile-fleet-solution-samples/main/backend/src/test/resources/test.json)
-3. Go to the [App.tsx](/example/LMFS/src/App.tsx) file and update the VEHICLE_ID from the endpoint response.
+3. Configure the VEHICLE_ID using one of the following methods:
+   - **Option 1: .env file (Recommended)** - Add the vehicle ID to your `.env` file in the `example` folder:
+     ```
+     LMFS_VEHICLE_ID=your_vehicle_id
+     ```
+   - **Option 2: Direct Input** - When you start the app, you can enter the vehicle ID directly in the "VEHICLE_ID Not Configured" screen.
+   - **Option 3: Code Update** - Go to the [App.tsx](/example/LMFS/src/App.tsx) file and update the VEHICLE_ID_DEFAULT constant with your vehicle ID.
 
 ## Setup
 

@@ -40,7 +40,7 @@ if (isNewArchitectureEnabled()) {
 android {
     namespace "com.google.android.react.driversdk"
     
-    compileSdkVersion 35
+    compileSdkVersion 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -48,8 +48,8 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 23
-        targetSdkVersion 34
+        minSdkVersion 26
+        targetSdkVersion 36
         versionCode 1
         // get version name from package.json version
         versionName "1.0"
@@ -85,7 +85,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:6.2.0'
+  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:7.0.0'
   implementation 'com.facebook.react:react-native:+'
   implementation 'com.android.support:multidex:1.0.3'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

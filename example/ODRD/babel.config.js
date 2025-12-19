@@ -27,8 +27,14 @@ module.exports = getConfig(
         {
           envName: 'APP_ENV',
           path: '../.env',
-          allowlist: ['PROJECT_ID', 'ANDROID_HOST', 'IOS_HOST', 'ODRD_PORT'],
-          allowUndefined: false,
+          allowlist: [
+            'PROJECT_ID',
+            'ANDROID_HOST',
+            'IOS_HOST',
+            'ODRD_PORT',
+            'ODRD_VEHICLE_ID',
+          ],
+          allowUndefined: true,
           verbose: false,
         },
       ],

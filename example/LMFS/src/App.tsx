@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
+  TextInput,
   View,
   Platform,
   Modal,
@@ -46,6 +47,7 @@ import {
   ANDROID_HOST,
   IOS_HOST,
   LMFS_PORT,
+  LMFS_VEHICLE_ID,
 } from '@env';
 import usePermissions from './checkPermissions';
 
@@ -56,7 +58,12 @@ const BASE_URL =
     : `http://${IOS_HOST}:${LMFS_PORT}`;
 
 // Update this vehicle id from the response from the /upload-delivery-config.html backend endpoint.
-const VEHICLE_ID = ''; // ADD_VEHICLE_ID_HERE
+// Can also be set via LMFS_VEHICLE_ID in .env file or as environment variable:
+// See README.md for configuration options.
+const VEHICLE_ID_DEFAULT = LMFS_VEHICLE_ID || ''; // ADD_VEHICLE_ID_HERE
+
+// New location reporting interval in seconds that is applied via menu action.
+const NEW_LOCATION_REPORTING_INTERVAL_SECONDS = 20;
 
 const termsAndConditionsDialogOptions: TermsAndConditionsDialogOptions = {
   title: 'RN LMFS Sample',
@@ -78,6 +85,9 @@ function LMFSSampleApp() {
     useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [driverSdkVersion, setDriverSdkVersion] = useState<string>('');
+  const [vehicleId, setVehicleId] = useState<string>(VEHICLE_ID_DEFAULT);
+  const [tempVehicleId, setTempVehicleId] =
+    useState<string>(VEHICLE_ID_DEFAULT);
 
   const clearInstance = useCallback(async () => {
     await deliveryDriverApi.clearInstance();
@@ -153,7 +163,33 @@ function LMFSSampleApp() {
     [onArrival, onNavigationReady, onNavigationInitError, onRouteStatusResult]
   );
 
+  const fetchAuthToken = useCallback(async () => {
+    if (!vehicleId) {
+      console.log('Vehicle ID not set, skipping auth token fetch');
+      return;
+    }
+    try {
+      console.log('Fetching auth token...');
+      const tokenUrl = BASE_URL + '/token/delivery_driver/' + vehicleId;
+      const response = await fetch(tokenUrl);
+      const { token } = await response.json();
+      console.log('Got token:', token);
+
+      setAuthToken(token);
+    } catch (error) {
+      console.log(
+        'There has been a problem connecting to the provider, please make sure it is running. ',
+        error
+      );
+    }
+  }, [vehicleId]);
+
   useEffect(() => {
+    if (!vehicleId) {
+      console.log('Vehicle ID not set, skipping initialization');
+      return;
+    }
+
     console.log('Init LMFS Example app');
     removeListeners(navigationCallbacks);
     addListeners(navigationCallbacks);
@@ -167,31 +203,21 @@ function LMFSSampleApp() {
       removeListeners(navigationCallbacks);
       clearInstance();
     };
-  }, [clearInstance, navigationCallbacks, addListeners, removeListeners]);
-
-  const fetchAuthToken = async () => {
-    try {
-      console.log('Fetching auth token...');
-      const tokenUrl = BASE_URL + '/token/delivery_driver/' + VEHICLE_ID;
-      const response = await fetch(tokenUrl);
-      const { token } = await response.json();
-      console.log('Got token:', token);
-
-      setAuthToken(token);
-    } catch (error) {
-      console.log(
-        'There has been a problem connecting to the provider, please make sure it is running. ',
-        error
-      );
-    }
-  };
+  }, [
+    clearInstance,
+    navigationCallbacks,
+    addListeners,
+    removeListeners,
+    vehicleId,
+    fetchAuthToken,
+  ]);
 
   const createInstance = async () => {
     try {
       console.log('Creating LMFS instance');
       await deliveryDriverApi.initialize(
         PROVIDER_ID,
-        VEHICLE_ID,
+        vehicleId,
         _tokenContext => {
           console.log('onGetToken call, return token: ', authToken);
           // Check if the token is expired, in such case request a new one.
@@ -237,11 +263,14 @@ function LMFSSampleApp() {
     }
   };
 
-  const setUpdateInterval = async () => {
+  const setLocationReportingInterval = async () => {
     try {
       await deliveryDriverApi
         .getDeliveryVehicleReporter()
-        .setLocationReportingInterval(20);
+        .setLocationReportingInterval(NEW_LOCATION_REPORTING_INTERVAL_SECONDS);
+      console.log(
+        `Location reporting interval set to ${NEW_LOCATION_REPORTING_INTERVAL_SECONDS} seconds`
+      );
     } catch (e) {
       console.error(e);
     }
@@ -313,19 +342,54 @@ function LMFSSampleApp() {
   const controlsButtonColor = '#d32f2f';
   const controlsButtonColorPressed = '#a12020';
 
-  if (!VEHICLE_ID) {
+  const handleSetVehicleId = () => {
+    if (tempVehicleId.trim()) {
+      setVehicleId(tempVehicleId.trim());
+    }
+  };
+
+  if (!vehicleId) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.alertContainer}>
           <Text style={styles.alertTitle}>VEHICLE_ID Not Configured</Text>
           <Text style={styles.alertMessage}>
-            Please set the VEHICLE_ID in App.tsx before running the app.
+            Please set the VEHICLE_ID to continue.
           </Text>
           <Text style={styles.alertInstructions}>
-            To configure:
-            {'\n'}1. Follow the setup instructions in the README
-            {'\n'}2. Create a delivery vehicle using the backend
-            {'\n'}3. Update VEHICLE_ID in example/LMFS/src/App.tsx
+            You can configure the vehicle ID in one of three ways:
+            {'\n'}
+            {'\n'}1. Add it to your .env file:
+            {'\n'} LMFS_VEHICLE_ID=your_vehicle_id
+            {'\n'}
+            {'\n'}2. Enter it directly below:
+          </Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Vehicle ID"
+              placeholderTextColor="#999"
+              value={tempVehicleId}
+              onChangeText={setTempVehicleId}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <View style={styles.buttonWrapper}>
+              <ActionButton
+                title="Set Vehicle ID"
+                onPress={handleSetVehicleId}
+                backgroundColor={buttonBackgroundColor}
+                pressedBackgroundColor={buttonBackgroundColorPressed}
+              />
+            </View>
+          </View>
+          <Text style={styles.alertInstructions}>
+            {'\n'}3. Update VEHICLE_ID_DEFAULT in example/LMFS/src/App.tsx
+            {'\n'}
+            {'\n'}To create a vehicle:
+            {'\n'}• Follow the setup instructions in the README
+            {'\n'}• Create a delivery vehicle using the backend
+            {'\n'}• Use the vehicle ID from the response
             {'\n'}
             {'\n'}See README.md for detailed instructions.
           </Text>
@@ -355,7 +419,7 @@ function LMFSSampleApp() {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            Vehicle ID: {VEHICLE_ID || 'Not set'}
+            Vehicle ID: {vehicleId || 'Not set'}
           </Text>
           <Text
             style={styles.versionText}
@@ -402,8 +466,8 @@ function LMFSSampleApp() {
               </View>
               <View style={styles.buttonWrapper}>
                 <ActionButton
-                  title="Update time interval"
-                  onPress={setUpdateInterval}
+                  title={`Set Location Reporting Interval to ${NEW_LOCATION_REPORTING_INTERVAL_SECONDS}s`}
+                  onPress={setLocationReportingInterval}
                   backgroundColor={buttonBackgroundColor}
                   pressedBackgroundColor={buttonBackgroundColorPressed}
                 />
@@ -641,6 +705,22 @@ const styles = StyleSheet.create({
   versionText: {
     color: '#0b1a2a',
     fontWeight: '600',
+  },
+  inputContainer: {
+    marginVertical: 16,
+    width: '100%',
+    maxWidth: 400,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#0b1a2a',
+    marginBottom: 12,
   },
 });
 

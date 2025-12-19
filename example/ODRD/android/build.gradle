@@ -20,7 +20,7 @@ def enableDesugaring = true
 buildscript {
     ext {
         buildToolsVersion = "36.0.0"
-        minSdkVersion = 34
+        minSdkVersion = 26
         compileSdkVersion = 36
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"

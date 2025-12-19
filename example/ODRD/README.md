@@ -35,7 +35,13 @@ curl -X POST http://localhost:8092/vehicle/new \
 }'
 ```
 
-1. Go to the [App.tsx](/example/ODRD/App.tsx) file and update the VEHICLE_ID according to your configuration.
+1. Configure the VEHICLE_ID using one of the following methods:
+   - **Option 1: .env file (Recommended)** - Add the vehicle ID to your `.env` file in the `example` folder:
+     ```
+     ODRD_VEHICLE_ID=your_vehicle_id
+     ```
+   - **Option 2: Direct Input** - When you start the app, you can enter the vehicle ID directly in the "VEHICLE_ID Not Configured" screen.
+   - **Option 3: Code Update** - Go to the [App.tsx](/example/ODRD/src/App.tsx) file and update the VEHICLE_ID_DEFAULT constant with your vehicle ID.
 
 ## Setup
 

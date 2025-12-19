@@ -161,7 +161,7 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      vehicleReporter.setLocationReportingInterval(new Long(interval), TimeUnit.SECONDS);
+      vehicleReporter.setLocationReportingInterval(Long.valueOf(interval), TimeUnit.SECONDS);
     } catch (Exception e) {
       promise.reject(e.toString(), e.getMessage(), e);
     }
