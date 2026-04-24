@@ -31,10 +31,10 @@ import com.google.android.libraries.mapsplatform.transportation.driver.api.rides
 import com.google.android.libraries.mapsplatform.transportation.driver.api.ridesharing.vehiclereporter.RidesharingVehicleReporter.VehicleState;
 import com.google.android.libraries.navigation.NavigationApi;
 import com.google.android.libraries.navigation.Navigator;
+import com.google.android.react.driversdk.NativeRidesharingModuleSpec;
 import com.google.android.react.driversdk.shared.DriverAuthTokenFactory;
 import com.google.android.react.driversdk.shared.JsErrors;
 import com.google.android.react.navsdk.NavModule;
-import com.google.android.react.driversdk.NativeRidesharingModuleSpec;
 import java.util.concurrent.TimeUnit;
 
 public class RidesharingModule extends NativeRidesharingModuleSpec {

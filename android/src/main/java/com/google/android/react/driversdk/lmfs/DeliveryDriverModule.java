@@ -32,10 +32,10 @@ import com.google.android.libraries.mapsplatform.transportation.driver.api.deliv
 import com.google.android.libraries.mapsplatform.transportation.driver.api.delivery.vehiclereporter.DeliveryVehicleReporter;
 import com.google.android.libraries.navigation.NavigationApi;
 import com.google.android.libraries.navigation.Navigator;
+import com.google.android.react.driversdk.NativeDeliveryDriverModuleSpec;
 import com.google.android.react.driversdk.shared.DriverAuthTokenFactory;
 import com.google.android.react.driversdk.shared.JsErrors;
 import com.google.android.react.navsdk.NavModule;
-import com.google.android.react.driversdk.NativeDeliveryDriverModuleSpec;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;

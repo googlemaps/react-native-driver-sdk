@@ -23,7 +23,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTDeliveryDriverModule : NativeDeliveryDriverModuleSpecBase <NativeDeliveryDriverModuleSpec>
+@interface RCTDeliveryDriverModule
+    : NativeDeliveryDriverModuleSpecBase <NativeDeliveryDriverModuleSpec>
 @property DeliveryDriverController *driverController;
 
 @end

@@ -111,15 +111,13 @@ RCT_EXPORT_MODULE(RidesharingModule);
   });
 }
 
-- (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve
-                     reject:(RCTPromiseRejectBlock)reject {
+- (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     resolve([RidesharingDriverController getDriverSdkVersion]);
   });
 }
 
-- (void)clearInstance:(RCTPromiseResolveBlock)resolve
-               reject:(RCTPromiseRejectBlock)reject {
+- (void)clearInstance:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self->_driverController clearInstance];
     resolve(@(YES));

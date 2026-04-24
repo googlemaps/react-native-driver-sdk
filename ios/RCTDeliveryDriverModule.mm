@@ -96,15 +96,13 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
   });
 }
 
-- (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve
-                     reject:(RCTPromiseRejectBlock)reject {
+- (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     resolve([DeliveryDriverController getDriverSdkVersion]);
   });
 }
 
-- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve
-                    reject:(RCTPromiseRejectBlock)reject {
+- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
@@ -116,8 +114,7 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
   });
 }
 
-- (void)clearInstance:(RCTPromiseResolveBlock)resolve
-               reject:(RCTPromiseRejectBlock)reject {
+- (void)clearInstance:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self->_driverController clearInstance];
     resolve(@(YES));
