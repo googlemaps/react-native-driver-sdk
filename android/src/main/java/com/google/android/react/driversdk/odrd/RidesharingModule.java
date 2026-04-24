@@ -20,8 +20,6 @@ import android.util.Log;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -36,11 +34,13 @@ import com.google.android.libraries.navigation.Navigator;
 import com.google.android.react.driversdk.shared.DriverAuthTokenFactory;
 import com.google.android.react.driversdk.shared.JsErrors;
 import com.google.android.react.navsdk.NavModule;
+import com.google.android.react.driversdk.NativeRidesharingModuleSpec;
 import java.util.concurrent.TimeUnit;
 
-public class RidesharingModule extends ReactContextBaseJavaModule {
+public class RidesharingModule extends NativeRidesharingModuleSpec {
 
   public static final String TAG = "RidesharingAPI";
+  public static final String REACT_CLASS = NAME;
   private static final String UPDATE_STATUS_EVENT_NAME = "updateStatus";
 
   private Navigator mNavigator = null;
@@ -59,13 +59,12 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-    return "RidesharingModule";
+    return NAME;
   }
 
   /** Creates an instance of the RidesharingDriverAPI */
-  @ReactMethod
-  public void createRidesharingInstance(String providerId, String vehicleId, Promise promise)
-      throws InterruptedException {
+  @Override
+  public void createRidesharingInstance(String providerId, String vehicleId, Promise promise) {
     if (RidesharingDriverApi.getInstance() != null) {
       promise.reject(
           JsErrors.DRIVER_API_ALREADY_EXISTS_CODE, JsErrors.DRIVER_API_ALREADY_EXISTS_MESSAGE);
@@ -107,7 +106,7 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
   }
 
   /** Enables fleet engine to track the vehicle if parameter is true, else it disables tracking */
-  @ReactMethod
+  @Override
   public void setLocationTrackingEnabled(boolean isTrackingEnabled, Promise promise) {
     try {
       if (vehicleReporter == null) {
@@ -128,7 +127,7 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
   }
 
   /** Sets vehicle to online if parameter sent is true, else vehicle is set to offline. */
-  @ReactMethod
+  @Override
   public void setVehicleState(boolean isVehicleOnline, Promise promise) {
     try {
       if (vehicleReporter == null) {
@@ -150,10 +149,10 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
   /**
    * Sets the interval in seconds for the location updates
    *
-   * @param interval number in seconds
+   * @param intervalSeconds number in seconds
    */
-  @ReactMethod
-  public void setLocationReportingInterval(int interval, Promise promise) {
+  @Override
+  public void setLocationReportingInterval(double intervalSeconds, Promise promise) {
     try {
       if (vehicleReporter == null) {
         promise.reject(
@@ -161,14 +160,15 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      vehicleReporter.setLocationReportingInterval(Long.valueOf(interval), TimeUnit.SECONDS);
+      vehicleReporter.setLocationReportingInterval((long) intervalSeconds, TimeUnit.SECONDS);
+      promise.resolve(null);
     } catch (Exception e) {
       promise.reject(e.toString(), e.getMessage(), e);
     }
   }
 
   /** Gets the current sdk version used */
-  @ReactMethod
+  @Override
   public void getDriverSdkVersion(Promise promise) {
     try {
       String version = RidesharingDriverApi.getDriverSdkVersion();
@@ -179,7 +179,7 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
   }
 
   /** Clears the instance of the RideSharingAPI */
-  @ReactMethod
+  @Override
   public void clearInstance(Promise promise) {
     try {
       RidesharingDriverApi.clearInstance();
@@ -192,7 +192,7 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
   }
 
   /** Enables/disables abnormal termination reporting */
-  @ReactMethod
+  @Override
   public void setAbnormalTerminationReporting(boolean isEnabled) {
     RidesharingDriverApi.setAbnormalTerminationReportingEnabled(isEnabled);
   }
@@ -226,35 +226,29 @@ public class RidesharingModule extends ReactContextBaseJavaModule {
    *
    * @param eventName
    */
-  @ReactMethod
+  @Override
   public void addListener(String eventName) {
-    if (listenerCount == 0) {
-      // Set up any upstream listeners or background tasks as necessary
-    }
-
-    listenerCount += 1;
+    listenerCount++;
   }
 
   /** Removes all status update listeners */
-  @ReactMethod
-  public void removeListeners(Integer count) {
-    listenerCount -= count;
-    if (listenerCount == 0) {
-      // Remove upstream listeners, stop unnecessary background tasks
-    }
+  @Override
+  public void removeListeners(double count) {
+    listenerCount -= (int) count;
   }
 
   /**
    * Create an AuthTokenFactory to be used by DriverContext when creating a RideSharingInstance.
    *
    * @param token jwt token from an authentication service
+   * @param vehicleId the vehicle ID
    * @param promise
    */
-  @ReactMethod
+  @Override
   public void setAuthToken(String token, String vehicleId, Promise promise) {
     try {
       tokenFactory.setToken(token);
-      promise.resolve(true);
+      promise.resolve(null);
     } catch (Exception e) {
       promise.reject(e.getMessage());
     }

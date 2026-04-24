@@ -21,8 +21,6 @@ import androidx.annotation.NonNull;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
-import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -37,14 +35,16 @@ import com.google.android.libraries.navigation.Navigator;
 import com.google.android.react.driversdk.shared.DriverAuthTokenFactory;
 import com.google.android.react.driversdk.shared.JsErrors;
 import com.google.android.react.navsdk.NavModule;
+import com.google.android.react.driversdk.NativeDeliveryDriverModuleSpec;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class DeliveryDriverModule extends ReactContextBaseJavaModule {
+public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
 
   public static final String TAG = "DeliveryDriverAPI";
+  public static final String REACT_CLASS = NAME;
 
   private DeliveryVehicleReporter vehicleReporter = null;
   private DriverAuthTokenFactory tokenFactory = new DriverAuthTokenFactory();
@@ -59,13 +59,12 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-    return "DeliveryDriverModule";
+    return NAME;
   }
 
   /** Creates an instance of the DeliveryDriverApi */
-  @ReactMethod
-  public void createDeliveryDriverInstance(String providerId, String vehicleId, Promise promise)
-      throws InterruptedException {
+  @Override
+  public void createDeliveryDriverInstance(String providerId, String vehicleId, Promise promise) {
     if (DeliveryDriverApi.getInstance() != null) {
       promise.reject(
           JsErrors.DRIVER_API_ALREADY_EXISTS_CODE, JsErrors.DRIVER_API_ALREADY_EXISTS_MESSAGE);
@@ -104,7 +103,7 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
   }
 
   /** Enables fleet engine to track the vehicle if parameter is true, else it disables tracking */
-  @ReactMethod
+  @Override
   public void setLocationTrackingEnabled(boolean isTrackingEnabled, Promise promise) {
     try {
       if (vehicleReporter == null) {
@@ -128,8 +127,8 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
    *
    * @param interval number in seconds
    */
-  @ReactMethod
-  public void setLocationReportingInterval(int interval, Promise promise) {
+  @Override
+  public void setLocationReportingInterval(double intervalSeconds, Promise promise) {
     try {
       if (vehicleReporter == null) {
         promise.reject(
@@ -137,14 +136,15 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
         return;
       }
 
-      vehicleReporter.setLocationReportingInterval(Long.valueOf(interval), TimeUnit.SECONDS);
+      vehicleReporter.setLocationReportingInterval((long) intervalSeconds, TimeUnit.SECONDS);
+      promise.resolve(null);
     } catch (Exception e) {
       promise.reject(e.toString(), e.getMessage(), e);
     }
   }
 
   /** Gets the current sdk version used */
-  @ReactMethod
+  @Override
   public void getDriverSdkVersion(Promise promise) {
     try {
       String version = DeliveryDriverApi.getDriverSdkVersion();
@@ -155,7 +155,7 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
   }
 
   /** Clears the instance of the DeliveryDriverApi */
-  @ReactMethod
+  @Override
   public void clearInstance(Promise promise) {
     try {
       vehicleReporter = null;
@@ -173,7 +173,7 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
    *
    * @param promise
    */
-  @ReactMethod
+  @Override
   public void getDeliveryVehicle(Promise promise) {
     DeliveryDriverApi apiInstance = DeliveryDriverApi.getInstance();
 
@@ -204,7 +204,7 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
   }
 
   /** Enables/disables abnormal termination reporting */
-  @ReactMethod
+  @Override
   public void setAbnormalTerminationReporting(boolean isEnabled) {
     DeliveryDriverApi.setAbnormalTerminationReportingEnabled(isEnabled);
   }
@@ -234,18 +234,29 @@ public class DeliveryDriverModule extends ReactContextBaseJavaModule {
   }
 
   /**
-   * Create an AuthTokenFactory to be used by DriverContext when creating a RideSharingInstance.
+   * Create an AuthTokenFactory to be used by DriverContext when creating a DeliveryDriverInstance.
    *
    * @param token jwt token from an authentication service
+   * @param vehicleId the vehicle ID
    * @param promise
    */
-  @ReactMethod
+  @Override
   public void setAuthToken(String token, String vehicleId, Promise promise) {
     try {
       tokenFactory.setToken(token);
-      promise.resolve(true);
+      promise.resolve(null);
     } catch (Exception e) {
       promise.reject(e.getMessage());
     }
+  }
+
+  @Override
+  public void addListener(String eventName) {
+    listenerCount++;
+  }
+
+  @Override
+  public void removeListeners(double count) {
+    listenerCount -= (int) count;
   }
 }

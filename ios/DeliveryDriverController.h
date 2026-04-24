@@ -15,7 +15,7 @@
  */
 
 #import <UIKit/UIKit.h>
-@import GoogleNavigation;
+#import <GoogleNavigation/GoogleNavigation.h>
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 #import "DriverEventDispatcher.h"
 

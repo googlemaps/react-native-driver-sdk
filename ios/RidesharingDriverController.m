@@ -18,7 +18,7 @@
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
 #import "AuthTokenFactory.h"
 
-@import UserNotifications;
+#import <UserNotifications/UserNotifications.h>
 
 @implementation RidesharingDriverController
 GMTDVehicleReporter *_ridesharingVehicleReporter;

@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
+#ifndef RCTDeliveryDriverModule_h
+#define RCTDeliveryDriverModule_h
+
+#import <RNDriverSdkSpec/RNDriverSdkSpec.h>
 #import "DeliveryDriverController.h"
 #import "JsErrorsConstants.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTDeliveryDriverModule : NSObject <RCTBridgeModule>
+@interface RCTDeliveryDriverModule : NativeDeliveryDriverModuleSpecBase <NativeDeliveryDriverModuleSpec>
 @property DeliveryDriverController *driverController;
 
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif /* RCTDeliveryDriverModule_h */

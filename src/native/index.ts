@@ -1,11 +1,11 @@
 /**
- * Copyright 2023 Google LLC
+ * Copyright 2026 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-#ifdef RCT_NEW_ARCH_ENABLED
-#import "RNGoogleReactDriversdkSpec.h"
-
-@interface GoogleReactDriversdk : NSObject <NativeGoogleReactDriversdkSpec>
-#else
-#import <React/RCTBridgeModule.h>
-
-@interface GoogleReactDriversdk : NSObject <RCTBridgeModule>
-#endif
-
-@end
+export {
+  default as DeliveryDriverModule,
+  type DeliveryDriverModuleSpec,
+} from './NativeDeliveryDriverModule';
+export {
+  default as RidesharingModule,
+  type RidesharingModuleSpec,
+} from './NativeRidesharingModule';
