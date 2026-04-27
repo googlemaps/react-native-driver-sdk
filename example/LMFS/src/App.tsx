@@ -55,7 +55,7 @@ const BASE_URL =
     ? `http://${ANDROID_HOST}:${LMFS_PORT}`
     : `http://${IOS_HOST}:${LMFS_PORT}`;
 
-// Update this vehicle id from the response from the /upload-delivery-config.html backend endpoint.
+// Update this vehicle id from the response from the /upload-backend-config.html backend endpoint.
 // Can also be set via LMFS_VEHICLE_ID in .env file or as environment variable:
 // See README.md for configuration options.
 const VEHICLE_ID_DEFAULT = LMFS_VEHICLE_ID || ''; // ADD_VEHICLE_ID_HERE
