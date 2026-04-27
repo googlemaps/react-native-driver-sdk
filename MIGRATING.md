@@ -19,7 +19,6 @@ Version 0.5.0 introduces React Native's **New Architecture** (TurboModules) as a
 | Architecture   | New Architecture required (React Native 0.79+)                                         |
 | Navigation SDK | Upgraded to `@googlemaps/react-native-navigation-sdk` 0.15.x (New Architecture)        |
 | Native Modules | Migrated from `NativeModules` bridge to TurboModules (JSI)                             |
-| Kotlin         | Updated the minimum Kotlin version to 2.2.10. Recommended AGP 8.10.0 and Gradle 8.11.1 |
 | React Native   | Support for React Native versions below 0.79.x has been dropped                        |
 
 ### Prerequisites
@@ -113,7 +112,6 @@ import {
 
 Ensure your `android/build.gradle` uses compatible versions:
 
-- **Kotlin**: 2.2.10 or higher
 - **Android Gradle Plugin (AGP)**: 8.10.0 (recommended)
 - **Gradle**: 8.11.1 (recommended)
 - **compileSdk**: 36 or higher
