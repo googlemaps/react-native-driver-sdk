@@ -32,11 +32,11 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/googlemaps/react-native-driver-sdk.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,cpp}"
-  s.private_header_files = "ios/**/*.h"
+  s.public_header_files = "ios/**/*.h"
 
   s.dependency "React-Core"
   s.dependency "react-native-navigation-sdk"
-  s.dependency "GoogleRidesharingDriver", ">= 10.0.0", "< 10.1.0"
+  s.dependency "GoogleRidesharingDriver", ">= 10.10.0", "< 10.11.0"
 
   install_modules_dependencies(s)
 end

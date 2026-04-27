@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -32,11 +32,9 @@ import {
   type RoutingOptions,
   TravelMode,
   RouteStatus,
-  type MapViewCallbacks,
   NavigationView,
   useNavigation,
-  type NavigationCallbacks,
-  NavigationInitErrorCode,
+  NavigationSessionStatus,
   NavigationProvider,
   type TermsAndConditionsDialogOptions,
 } from '@googlemaps/react-native-navigation-sdk';
@@ -57,7 +55,7 @@ const BASE_URL =
     ? `http://${ANDROID_HOST}:${LMFS_PORT}`
     : `http://${IOS_HOST}:${LMFS_PORT}`;
 
-// Update this vehicle id from the response from the /upload-delivery-config.html backend endpoint.
+// Update this vehicle id from the response from the /upload-backend-config.html backend endpoint.
 // Can also be set via LMFS_VEHICLE_ID in .env file or as environment variable:
 // See README.md for configuration options.
 const VEHICLE_ID_DEFAULT = LMFS_VEHICLE_ID || ''; // ADD_VEHICLE_ID_HERE
@@ -75,8 +73,12 @@ const deliveryDriverApi = new DeliveryDriverApi();
 
 function LMFSSampleApp() {
   const { arePermissionsApproved } = usePermissions();
-  const { navigationController, addListeners, removeListeners } =
-    useNavigation();
+  const {
+    navigationController,
+    removeAllListeners,
+    setOnArrival,
+    setOnNavigationReady,
+  } = useNavigation();
 
   const [shouldShowControls, setShouldShowControls] = useState(false);
   const [isAbnormalTerminationEnabled, setAbnormalTerminationEnabled] =
@@ -97,13 +99,6 @@ function LMFSSampleApp() {
     console.log('onNavigationReady');
   }, []);
 
-  const onNavigationInitError = useCallback(
-    (errorCode: NavigationInitErrorCode) => {
-      console.log(`Failed to initialize navigation errorCode: ${errorCode}`);
-    },
-    []
-  );
-
   const onArrival = useCallback(
     (arrival: ArrivalEvent) => {
       if (arrival.isFinalDestination) {
@@ -118,49 +113,6 @@ function LMFSSampleApp() {
       console.log('LMFS arrived');
     },
     [navigationController]
-  );
-
-  const onRouteStatusResult = useCallback(
-    (routeStatus: RouteStatus) => {
-      switch (routeStatus) {
-        case RouteStatus.OK:
-          navigationController?.startGuidance();
-
-          navigationController?.simulator.simulateLocationsAlongExistingRoute({
-            speedMultiplier: 2,
-          });
-          break;
-        case RouteStatus.ROUTE_CANCELED:
-          console.log('ROUTE_CANCELED');
-          break;
-        case RouteStatus.NO_ROUTE_FOUND:
-          console.log('NO_ROUTE_FOUND');
-          break;
-        case RouteStatus.NETWORK_ERROR:
-          console.log('NETWORK_ERROR');
-          break;
-        case RouteStatus.LOCATION_DISABLED:
-          console.log('LOCATION_DISABLED');
-          break;
-        case RouteStatus.LOCATION_UNKNOWN:
-          console.log('LOCATION_UNKNOWN');
-          break;
-        default:
-          console.log(routeStatus);
-          onStartingGuidanceError();
-      }
-    },
-    [navigationController]
-  );
-
-  const navigationCallbacks: NavigationCallbacks = useMemo(
-    () => ({
-      onArrival,
-      onNavigationReady,
-      onNavigationInitError,
-      onRouteStatusResult,
-    }),
-    [onArrival, onNavigationReady, onNavigationInitError, onRouteStatusResult]
   );
 
   const fetchAuthToken = useCallback(async () => {
@@ -191,8 +143,8 @@ function LMFSSampleApp() {
     }
 
     console.log('Init LMFS Example app');
-    removeListeners(navigationCallbacks);
-    addListeners(navigationCallbacks);
+    setOnArrival(onArrival);
+    setOnNavigationReady(onNavigationReady);
     fetchAuthToken();
     deliveryDriverApi
       .getDriverSdkVersion()
@@ -200,14 +152,16 @@ function LMFSSampleApp() {
       .catch(error => console.warn('Failed to get Driver SDK version', error));
 
     return () => {
-      removeListeners(navigationCallbacks);
+      removeAllListeners();
       clearInstance();
     };
   }, [
     clearInstance,
-    navigationCallbacks,
-    addListeners,
-    removeListeners,
+    onArrival,
+    onNavigationReady,
+    setOnArrival,
+    setOnNavigationReady,
+    removeAllListeners,
     vehicleId,
     fetchAuthToken,
   ]);
@@ -280,16 +234,32 @@ function LMFSSampleApp() {
     setShouldShowControls(false);
   };
 
-  const onMapReady = async () => {
+  const onMapReady = useCallback(async () => {
     console.log('Map is ready, initializing navigator...');
     try {
-      await navigationController.init();
+      // Show terms and conditions dialog
+      const termsAccepted =
+        await navigationController.showTermsAndConditionsDialog();
+
+      if (!termsAccepted) {
+        console.log('User declined terms');
+        return;
+      }
+
+      // Initialize navigation session
+      const status = await navigationController.init();
+
+      if (status === NavigationSessionStatus.OK) {
+        console.log('Navigation initialized successfully');
+      } else {
+        console.error('Navigation init failed with status:', status);
+      }
     } catch (error) {
       console.error('Error initializing navigator', error);
     }
-  };
+  }, [navigationController]);
 
-  const runNavigation = () => {
+  const runNavigation = useCallback(async () => {
     const firstWaypoint = {
       placeId: 'ChIJw____96GhYARCVVwg5cT7c0', // Golden gate, SF
     };
@@ -304,18 +274,24 @@ function LMFSSampleApp() {
       avoidTolls: false,
     };
 
-    navigationController?.setDestinations(
+    const routeStatus = await navigationController?.setDestinations(
       [firstWaypoint, secondWaypoint],
-      routingOptions
+      { routingOptions }
     );
-  };
+
+    if (routeStatus === RouteStatus.OK) {
+      navigationController?.startGuidance();
+      navigationController?.simulator.simulateLocationsAlongExistingRoute({
+        speedMultiplier: 2,
+      });
+    } else {
+      console.log('Route creation failed:', routeStatus);
+      onStartingGuidanceError();
+    }
+  }, [navigationController]);
 
   const onStartingGuidanceError = () => {
     console.log('Error: Starting Guidance Error');
-  };
-
-  const mapViewCallbacks: MapViewCallbacks = {
-    onMapReady,
   };
 
   const toggleLocationTrackingEnabled = (value: boolean) => {
@@ -407,7 +383,7 @@ function LMFSSampleApp() {
       <View style={styles.mapContainer}>
         <NavigationView
           style={styles.map}
-          mapViewCallbacks={mapViewCallbacks}
+          onMapReady={onMapReady}
           onNavigationViewControllerCreated={() => {}}
           onMapViewControllerCreated={() => {}}
         />

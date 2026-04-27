@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-#import "RCTRideSharingModule.h"
+#import "RCTDeliveryDriverModule.h"
 #import <React/RCTUIManager.h>
 #import <ReactNativeGoogleMapsNavigation/NavModule.h>
 
-@implementation RCTRideSharingModule
+@implementation RCTDeliveryDriverModule
 
-RCT_EXPORT_MODULE(RideSharingModule);
+RCT_EXPORT_MODULE(DeliveryDriverModule);
 
-@synthesize bridge = _bridge;
-
-- (dispatch_queue_t)methodQueue {
-  return self.bridge.uiManager.methodQueue;
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params {
+  return std::make_shared<facebook::react::NativeDeliveryDriverModuleSpecJSI>(params);
 }
 
 + (id)allocWithZone:(NSZone *)zone {
-  static RCTRideSharingModule *sharedInstance = nil;
+  static RCTDeliveryDriverModule *sharedInstance = nil;
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     sharedInstance = [super allocWithZone:zone];
@@ -37,11 +36,10 @@ RCT_EXPORT_MODULE(RideSharingModule);
   return sharedInstance;
 }
 
-RCT_EXPORT_METHOD(createRidesharingInstance
-                  : (NSString *)providerId vehicleId
-                  : (NSString *)vehicleId resolve
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)createDeliveryDriverInstance:(NSString *)providerId
+                           vehicleId:(NSString *)vehicleId
+                             resolve:(RCTPromiseResolveBlock)resolve
+                              reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController != nil && [self->_driverController isDriverApiInitialized]) {
       reject(kDriverApiAlreadyExistsErrorCode, kDriverApiAlreadyExistsErrorMessage, nil);
@@ -55,17 +53,16 @@ RCT_EXPORT_METHOD(createRidesharingInstance
       return;
     }
 
-    self->_driverController = [[RidesharingDriverController alloc] init];
+    self->_driverController = [[DeliveryDriverController alloc] init];
     [self->_driverController initializeWithSession:session];
-    [self->_driverController createRidesharingInstance:providerId vehicleId:vehicleId];
-    resolve(nil);
+    [self->_driverController createDeliveryDriverInstance:providerId vehicleId:vehicleId];
+    resolve(@(YES));
   });
 }
 
-RCT_EXPORT_METHOD(setLocationTrackingEnabled
-                  : (BOOL)isEnabled resolve
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)setLocationTrackingEnabled:(BOOL)isEnabled
+                           resolve:(RCTPromiseResolveBlock)resolve
+                            reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
@@ -74,36 +71,19 @@ RCT_EXPORT_METHOD(setLocationTrackingEnabled
     }
 
     [self->_driverController setLocationTrackingEnabled:isEnabled];
-    resolve(nil);
+    resolve(@(YES));
   });
 }
 
-RCT_EXPORT_METHOD(setVehicleState
-                  : (BOOL)isEnabled resolve
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)setAbnormalTerminationReporting:(BOOL)isEnabled {
   dispatch_async(dispatch_get_main_queue(), ^{
-    if (self->_driverController == nil ||
-        [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
-      return;
-    }
-
-    [self->_driverController setVehicleState:isEnabled];
-    resolve(nil);
+    [DeliveryDriverController setAbnormalTerminationReporting:isEnabled];
   });
 }
 
-RCT_EXPORT_METHOD(setAbnormalTerminationReporting : (BOOL)isEnabled) {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [RidesharingDriverController setAbnormalTerminationReporting:isEnabled];
-  });
-}
-
-RCT_EXPORT_METHOD(setLocationReportingInterval
-                  : (double)intervalSeconds resolve
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)setLocationReportingInterval:(double)intervalSeconds
+                             resolve:(RCTPromiseResolveBlock)resolve
+                              reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
@@ -116,25 +96,35 @@ RCT_EXPORT_METHOD(setLocationReportingInterval
   });
 }
 
-RCT_EXPORT_METHOD(getDriverSdkVersion
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
-    resolve([RidesharingDriverController getDriverSdkVersion]);
+    resolve([DeliveryDriverController getDriverSdkVersion]);
   });
 }
 
-RCT_EXPORT_METHOD(clearInstance) {
+- (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self->_driverController == nil ||
+        [self->_driverController isDriverApiInitialized] == false) {
+      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
+      return;
+    }
+
+    [self->_driverController getDeliveryVehicle:resolve rejecter:reject];
+  });
+}
+
+- (void)clearInstance:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self->_driverController clearInstance];
+    resolve(@(YES));
   });
 }
 
-RCT_EXPORT_METHOD(setAuthToken
-                  : (NSString *)authToken vehicleId
-                  : (NSString *)vehicleId resolve
-                  : (RCTPromiseResolveBlock)resolve rejecter
-                  : (RCTPromiseRejectBlock)reject) {
+- (void)setAuthToken:(NSString *)authToken
+           vehicleId:(NSString *)vehicleId
+             resolve:(RCTPromiseResolveBlock)resolve
+              reject:(RCTPromiseRejectBlock)reject {
   dispatch_async(dispatch_get_main_queue(), ^{
     if (self->_driverController == nil ||
         [self->_driverController isDriverApiInitialized] == false) {
@@ -147,15 +137,15 @@ RCT_EXPORT_METHOD(setAuthToken
   });
 }
 
-RCT_EXPORT_METHOD(addListener : (NSString *)eventName) {
+- (void)addListener:(NSString *)eventName {
   dispatch_async(dispatch_get_main_queue(), ^{
     [self->_driverController addListener:eventName];
   });
 }
 
-RCT_EXPORT_METHOD(removeListeners : (NSString *)eventName) {
+- (void)removeListeners:(double)count {
   dispatch_async(dispatch_get_main_queue(), ^{
-    [self->_driverController removeListeners:eventName];
+    [self->_driverController removeListeners:[NSString stringWithFormat:@"%d", (int)count]];
   });
 }
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { NativeModules } from 'react-native';
+import { DeliveryDriverModule } from '../native';
 import {
   DriverApi,
   type OnGetTokenCallback,
@@ -40,7 +40,7 @@ interface DeliveryVehicleManager {
 /** Entry point into the DriverApi for the delivery vertical. */
 export class DeliveryDriverApi extends DriverApi {
   constructor() {
-    super(NativeModules.DeliveryDriverModule);
+    super(DeliveryDriverModule);
   }
 
   async initialize(

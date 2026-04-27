@@ -17,6 +17,7 @@ addlicense -f header_template.txt $@ \
         --ignore "**/Pods/**" \
         --ignore "**/node_modules/**" \
         --ignore "**/android/**/build/**" \
+        --ignore "**/android/**/.cxx/**" \
         --ignore "**/android/.gradle/**" \
         --ignore "**/android/.idea/**" \
         --ignore "**/ios/build/**" \
@@ -25,4 +26,5 @@ addlicense -f header_template.txt $@ \
         --ignore "coverage/**" \
         --ignore ".yarn/**" \
         --ignore ".github/ISSUE_TEMPLATE/**" \
+        --ignore ".github/java-upgrade/**" \
         .

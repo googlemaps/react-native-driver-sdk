@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-#import <React/RCTBridgeModule.h>
+#ifndef RCTRideSharingModule_h
+#define RCTRideSharingModule_h
+
+#import <RNDriverSdkSpec/RNDriverSdkSpec.h>
 #import "JsErrorsConstants.h"
 #import "RidesharingDriverController.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTRideSharingModule : NSObject <RCTBridgeModule>
+@interface RCTRideSharingModule : NativeRidesharingModuleSpecBase <NativeRidesharingModuleSpec>
 @property RidesharingDriverController *driverController;
 
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif /* RCTRideSharingModule_h */

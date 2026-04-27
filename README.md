@@ -33,7 +33,10 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 ## React Native Compatibility
 
 > [!IMPORTANT]
-> This package does not yet support React Native's new architecture. Make sure the new architecture is disabled in your project configuration as shown in the [Installation](#installation) section.
+> This package requires React Native 0.79+ with the new architecture (TurboModules) enabled. Make sure the new architecture is enabled in your project configuration as shown in the [Installation](#installation) section.
+
+> [!NOTE]
+> For users upgrading from versions prior to 0.5.0, please refer to the [Migration Guide](./MIGRATING.md) for instructions on migrating to the new architecture.
 
 ## Installation
 
@@ -62,12 +65,12 @@ This is the beta release of the Google Driver SDK package for React Native. It i
 ### Android
 
 
-#### Disable new architecture
+#### Enable new architecture
 
-This package does not yet support new architecture. Make sure new architecture is disabled in your `android/gradle.properties` file:
+This package requires the new architecture. Make sure new architecture is enabled in your `android/gradle.properties` file:
 
 ```groovy
-newArchEnabled=false
+newArchEnabled=true
 ```
 
 #### Enable Jetifier
@@ -121,12 +124,12 @@ See example configuration for secrets plugin at example applications [build.grad
 
 ### iOS
 
-#### Disable new architecture
+#### Enable new architecture
 
-This package does not yet support new architecture. Make sure new architecture is disabled in your `ios/Podfile`:
+This package requires the new architecture. Make sure new architecture is enabled in your `ios/Podfile`:
 
 ```ruby
-ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ```
 
 #### Set Google Maps API Key

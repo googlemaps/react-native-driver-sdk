@@ -1,5 +1,5 @@
-# Disable new arch as it is not supported by the current version of package
-ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+# Enable new architecture for TurboModules support
+ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 
 def node_require(script)
   # Resolve script with node to allow for hoisting
@@ -51,5 +51,15 @@ target 'SampleApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Fix fmt compilation issue with Xcode 26+ (stricter consteval enforcement)
+    # Fixed in React Native 0.85+, can be removed after upgrading.
+    installer.pods_project.targets.each do |target|
+      if target.name == 'fmt'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
+      end
+    end
   end
 end

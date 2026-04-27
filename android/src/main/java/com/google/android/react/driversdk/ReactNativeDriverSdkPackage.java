@@ -13,29 +13,68 @@
  */
 package com.google.android.react.driversdk;
 
-import androidx.annotation.NonNull;
-import com.facebook.react.ReactPackage;
+import com.facebook.proguard.annotations.DoNotStrip;
+import com.facebook.react.BaseReactPackage;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.module.model.ReactModuleInfo;
+import com.facebook.react.module.model.ReactModuleInfoProvider;
 import com.facebook.react.uimanager.ViewManager;
 import com.google.android.react.driversdk.lmfs.DeliveryDriverModule;
 import com.google.android.react.driversdk.odrd.RidesharingModule;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class ReactNativeDriverSdkPackage implements ReactPackage {
-  @NonNull
+@DoNotStrip
+public class ReactNativeDriverSdkPackage extends BaseReactPackage {
+
   @Override
-  public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
-    List<NativeModule> modules = new ArrayList<>();
-    modules.add(new RidesharingModule(reactContext));
-    modules.add(new DeliveryDriverModule(reactContext));
-    return modules;
+  public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+    return new ArrayList<>();
   }
 
-  @NonNull
   @Override
-  public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
-    return new ArrayList<>();
+  public NativeModule getModule(String name, ReactApplicationContext reactContext) {
+    switch (name) {
+      case RidesharingModule.REACT_CLASS:
+        return new RidesharingModule(reactContext);
+      case DeliveryDriverModule.REACT_CLASS:
+        return new DeliveryDriverModule(reactContext);
+      default:
+        return null;
+    }
+  }
+
+  @Override
+  public ReactModuleInfoProvider getReactModuleInfoProvider() {
+    return () -> {
+      Map<String, ReactModuleInfo> moduleInfos = new HashMap<>();
+
+      moduleInfos.put(
+          RidesharingModule.REACT_CLASS,
+          new ReactModuleInfo(
+              RidesharingModule.REACT_CLASS,
+              RidesharingModule.REACT_CLASS,
+              false, // canOverrideExistingModule
+              false, // needsEagerInit
+              false, // isCxxModule
+              true // isTurboModule
+              ));
+
+      moduleInfos.put(
+          DeliveryDriverModule.REACT_CLASS,
+          new ReactModuleInfo(
+              DeliveryDriverModule.REACT_CLASS,
+              DeliveryDriverModule.REACT_CLASS,
+              false, // canOverrideExistingModule
+              false, // needsEagerInit
+              false, // isCxxModule
+              true // isTurboModule
+              ));
+
+      return moduleInfos;
+    };
   }
 }

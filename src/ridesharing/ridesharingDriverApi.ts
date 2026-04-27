@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { NativeModules, Platform } from 'react-native';
-const { RideSharingModule, RidesharingModule } = NativeModules;
+import { RidesharingModule } from '../native';
 import {
   type VehicleReporter,
   VehicleState,
@@ -36,7 +35,7 @@ interface RidesharingVehicleReporter extends VehicleReporter {
 /** Entry point into the DriverApi for the ridesharing vertical. */
 export class RidesharingDriverApi extends DriverApi {
   constructor() {
-    super(Platform.OS === 'ios' ? RideSharingModule : RidesharingModule);
+    super(RidesharingModule);
   }
 
   async initialize(

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -32,13 +32,11 @@ import {
   type RoutingOptions,
   TravelMode,
   RouteStatus,
-  type MapViewCallbacks,
   NavigationView,
   useNavigation,
-  type NavigationCallbacks,
-  NavigationInitErrorCode,
   NavigationProvider,
   type TermsAndConditionsDialogOptions,
+  NavigationSessionStatus,
 } from '@googlemaps/react-native-navigation-sdk';
 import {
   RidesharingDriverApi,
@@ -77,8 +75,12 @@ const ridesharingDriverApi = new RidesharingDriverApi();
 
 function ODRDSampleApp() {
   const { arePermissionsApproved } = usePermissions();
-  const { navigationController, addListeners, removeListeners } =
-    useNavigation();
+  const {
+    navigationController,
+    setOnArrival,
+    setOnNavigationReady,
+    removeAllListeners,
+  } = useNavigation();
 
   const [shouldShowControls, setShouldShowControls] = useState(false);
   const [isAbnormalTerminationEnabled, setAbnormalTerminationEnabled] =
@@ -100,13 +102,6 @@ function ODRDSampleApp() {
     console.log('onNavigationReady');
   }, []);
 
-  const onNavigationInitError = useCallback(
-    (errorCode: NavigationInitErrorCode) => {
-      console.log(`Failed to initialize navigation errorCode: ${errorCode}`);
-    },
-    []
-  );
-
   const onArrival = useCallback(
     (arrival: ArrivalEvent) => {
       if (arrival.isFinalDestination) {
@@ -119,39 +114,6 @@ function ODRDSampleApp() {
       }
 
       console.log('ODRD arrived');
-    },
-    [navigationController]
-  );
-
-  const onRouteStatusResult = useCallback(
-    (routeStatus: RouteStatus) => {
-      switch (routeStatus) {
-        case RouteStatus.OK:
-          navigationController?.startGuidance();
-
-          navigationController?.simulator.simulateLocationsAlongExistingRoute({
-            speedMultiplier: 2,
-          });
-          break;
-        case RouteStatus.ROUTE_CANCELED:
-          console.log('ROUTE_CANCELED');
-          break;
-        case RouteStatus.NO_ROUTE_FOUND:
-          console.log('NO_ROUTE_FOUND');
-          break;
-        case RouteStatus.NETWORK_ERROR:
-          console.log('NETWORK_ERROR');
-          break;
-        case RouteStatus.LOCATION_DISABLED:
-          console.log('LOCATION_DISABLED');
-          break;
-        case RouteStatus.LOCATION_UNKNOWN:
-          console.log('LOCATION_UNKNOWN');
-          break;
-        default:
-          console.log(routeStatus);
-          onStartingGuidanceError();
-      }
     },
     [navigationController]
   );
@@ -177,16 +139,6 @@ function ODRDSampleApp() {
     }
   }, [vehicleId]);
 
-  const navigationCallbacks: NavigationCallbacks = useMemo(
-    () => ({
-      onArrival,
-      onNavigationReady,
-      onNavigationInitError,
-      onRouteStatusResult,
-    }),
-    [onArrival, onNavigationReady, onNavigationInitError, onRouteStatusResult]
-  );
-
   useEffect(() => {
     if (!vehicleId) {
       console.log('Vehicle ID not set, skipping initialization');
@@ -194,8 +146,8 @@ function ODRDSampleApp() {
     }
 
     console.log('Init ODRD Example app');
-    removeListeners(navigationCallbacks);
-    addListeners(navigationCallbacks);
+    setOnArrival(onArrival);
+    setOnNavigationReady(onNavigationReady);
     fetchAuthToken();
     ridesharingDriverApi
       .getDriverSdkVersion()
@@ -203,16 +155,18 @@ function ODRDSampleApp() {
       .catch(error => console.warn('Failed to get Driver SDK version', error));
 
     return () => {
-      removeListeners(navigationCallbacks);
+      removeAllListeners();
       clearInstance();
     };
   }, [
     clearInstance,
-    navigationCallbacks,
-    addListeners,
-    removeListeners,
+    setOnArrival,
+    setOnNavigationReady,
+    removeAllListeners,
     vehicleId,
     fetchAuthToken,
+    onArrival,
+    onNavigationReady,
   ]);
 
   const createInstance = async () => {
@@ -272,16 +226,24 @@ function ODRDSampleApp() {
     setShouldShowControls(false);
   };
 
-  const onMapReady = async () => {
+  const onMapReady = useCallback(async () => {
     console.log('Map is ready, initializing navigator...');
     try {
-      await navigationController.init();
+      await navigationController.showTermsAndConditionsDialog(
+        termsAndConditionsDialogOptions
+      );
+      const status = await navigationController.init();
+      if (status !== NavigationSessionStatus.OK) {
+        console.error('Navigation session not accepted:', status);
+        return;
+      }
+      console.log('Navigator initialized successfully');
     } catch (error) {
       console.error('Error initializing navigator', error);
     }
-  };
+  }, [navigationController]);
 
-  const runNavigation = () => {
+  const runNavigation = useCallback(async () => {
     const firstWaypoint = {
       placeId: 'ChIJw____96GhYARCVVwg5cT7c0', // Golden gate, SF
     };
@@ -296,18 +258,41 @@ function ODRDSampleApp() {
       avoidTolls: false,
     };
 
-    navigationController?.setDestinations(
+    const routeStatus = await navigationController?.setDestinations(
       [firstWaypoint, secondWaypoint],
-      routingOptions
+      { routingOptions }
     );
-  };
+
+    switch (routeStatus) {
+      case RouteStatus.OK:
+        navigationController?.startGuidance();
+        navigationController?.simulator.simulateLocationsAlongExistingRoute({
+          speedMultiplier: 2,
+        });
+        break;
+      case RouteStatus.ROUTE_CANCELED:
+        console.log('ROUTE_CANCELED');
+        break;
+      case RouteStatus.NO_ROUTE_FOUND:
+        console.log('NO_ROUTE_FOUND');
+        break;
+      case RouteStatus.NETWORK_ERROR:
+        console.log('NETWORK_ERROR');
+        break;
+      case RouteStatus.LOCATION_DISABLED:
+        console.log('LOCATION_DISABLED');
+        break;
+      case RouteStatus.LOCATION_UNKNOWN:
+        console.log('LOCATION_UNKNOWN');
+        break;
+      default:
+        console.log('Unknown route status:', routeStatus);
+        onStartingGuidanceError();
+    }
+  }, [navigationController]);
 
   const onStartingGuidanceError = () => {
     console.log('Error: Starting Guidance Error');
-  };
-
-  const mapViewCallbacks: MapViewCallbacks = {
-    onMapReady,
   };
 
   const toggleLocationTrackingEnabled = (value: boolean) => {
@@ -408,7 +393,7 @@ function ODRDSampleApp() {
       <View style={styles.mapContainer}>
         <NavigationView
           style={styles.map}
-          mapViewCallbacks={mapViewCallbacks}
+          onMapReady={onMapReady}
           onNavigationViewControllerCreated={() => {}}
           onMapViewControllerCreated={() => {}}
         />

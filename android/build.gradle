@@ -12,35 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import groovy.json.JsonSlurper
-
-buildscript {
-    ext.kotlin_version = '2.1.21'
-    repositories {
-        google()
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath("com.android.tools.build:gradle:8.6.1")
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
-def isNewArchitectureEnabled() {
-  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
 apply plugin: 'com.android.library'
-
-if (isNewArchitectureEnabled()) {
-  apply plugin: "com.facebook.react"
-}
+apply plugin: 'kotlin-android'
+apply plugin: 'com.facebook.react'
 
 android {
     namespace "com.google.android.react.driversdk"
-    
-    compileSdkVersion 36
+    compileSdk safeExtGet('compileSdkVersion', 35)
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -48,16 +30,13 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 26
-        targetSdkVersion 36
-        versionCode 1
-        // get version name from package.json version
-        versionName "1.0"
+        minSdk safeExtGet('minSdkVersion', 26)
+        targetSdk safeExtGet('targetSdkVersion', 35)
     }
 
     buildTypes {
         release {
-        minifyEnabled false
+            minifyEnabled false
         }
     }
 
@@ -65,18 +44,15 @@ android {
         abortOnError false
         disable "GradleCompatible"
     }
-}
 
-allprojects {
-  // Required: you must exclude the Google Play service Maps SDK from
-  // your transitive dependencies. This is to ensure there won't be
-  // multiple copies of Google Maps SDK in your binary, as the Navigation
-  // SDK already bundles the Google Maps SDK.
-  configurations {
-    implementation {
-      exclude group: 'com.google.android.gms', module: 'play-services-maps'
+    sourceSets {
+        main {
+            java.srcDirs += [
+                "generated/java",
+                "generated/jni"
+            ]
+        }
     }
-  }
 }
 
 repositories {
@@ -87,7 +63,6 @@ repositories {
 dependencies {
   implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:7.0.0'
   implementation 'com.facebook.react:react-native:+'
-  implementation 'com.android.support:multidex:1.0.3'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
   api 'com.google.guava:guava:31.0.1-android'
 

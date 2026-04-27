@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
-@import GoogleNavigation;
+#import <GoogleNavigation/GoogleNavigation.h>
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
+#import <UIKit/UIKit.h>
 #import "DriverEventDispatcher.h"
 
 NS_ASSUME_NONNULL_BEGIN
