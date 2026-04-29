@@ -13,57 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { NativeEventEmitter, NativeModules } from 'react-native';
-import type {
-  OnGetTokenCallback,
-  OnStatusUpdateCallback,
-  VehicleReporterListener,
-  VehicleUpdate,
-  VehicleUpdateError,
+import type { EventSubscription } from 'react-native';
+import {
+  DriverStatusCode,
+  DriverStatusLevel,
+  type AuthTokenContext,
+  type OnGetTokenCallback,
+  type OnStatusUpdateCallback,
+  type VehicleUpdate,
+  type VehicleUpdateError,
 } from './types';
 
-export const STATUS_UPDATE_EVENT_TYPE = 'updateStatus';
-export const VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE = 'didSucceedVehicleUpdate';
-export const VEHICLE_REPORTER_FAILED_UPDATE_TYPE = 'didFailVehicleUpdate';
+/** A callable that subscribes to an event and returns a removable subscription. */
+type EventEmitterFn<T> = (handler: (event: T) => void) => EventSubscription;
 
-type StatusUpdateEvent = {
-  statusLevel: string;
-  statusCode: string;
-  statusMsg: string;
-};
+/**
+ * Interface for the native TurboModule used by DriverApi.
+ * Both DeliveryDriverModule and RidesharingModule extend this shape.
+ * This keeps codegen spec types internal — event payloads are converted to
+ * public types (VehicleUpdate, VehicleUpdateError, AuthTokenContext) at the boundary.
+ */
+export interface DriverNativeModule {
+  clearInstance(): Promise<boolean>;
+  setAbnormalTerminationReporting(isEnabled: boolean): void;
+  getDriverSdkVersion(): Promise<string>;
+  setLocationTrackingEnabled(isEnabled: boolean): Promise<boolean>;
+  setLocationReportingInterval(intervalSeconds: number): Promise<void>;
+  resolveAuthToken(requestId: string, token: string): void;
+  rejectAuthToken(requestId: string, error: string): void;
+  onGetToken: EventEmitterFn<
+    Readonly<{ requestId: string; vehicleId: string; taskId: string }>
+  >;
+  onStatusUpdate: EventEmitterFn<
+    Readonly<{ statusLevel: string; statusCode: string; statusMsg: string }>
+  >;
+  onVehicleUpdateSucceed: EventEmitterFn<
+    Readonly<{ vehicleUpdate: VehicleUpdate }>
+  >;
+  onVehicleUpdateFailed: EventEmitterFn<
+    Readonly<{ vehicleUpdate: VehicleUpdate; error: VehicleUpdateError }>
+  >;
+}
 
-type VehicleReporterSuccessEvent = {
-  vehicleUpdate: VehicleUpdate;
-};
-
-type VehicleReporterFailureEvent = {
-  vehicleUpdate: VehicleUpdate;
-  error: VehicleUpdateError;
-};
-
-const TOKEN_UPDATE_INTERVAL_SECONDS = 10;
-
-type DriverEventDispatcherModule = {
-  addListener: (eventType: string) => void;
-  removeListeners: (count: number) => void;
-};
-
-export abstract class DriverApi {
-  nativeModule: typeof NativeModules;
+export abstract class DriverApi<
+  T extends DriverNativeModule = DriverNativeModule,
+> {
+  nativeModule: T;
   onGetTokenCallback?: OnGetTokenCallback;
   vehicleId?: string;
-  isLocationTrackingEnabled: boolean = false;
-  fetchTokenTimeoutId?: ReturnType<typeof setTimeout>;
 
-  private createEventEmitter = (): NativeEventEmitter => {
-    const driverEventDispatcher = (
-      NativeModules as Record<string, DriverEventDispatcherModule | undefined>
-    ).DriverEventDispatcher;
+  private subscriptions: EventSubscription[] = [];
 
-    return new NativeEventEmitter(driverEventDispatcher ?? null);
-  };
-
-  constructor(nativeModule: typeof NativeModules) {
+  constructor(nativeModule: T) {
     this.nativeModule = nativeModule;
   }
 
@@ -71,7 +72,8 @@ export abstract class DriverApi {
    * Creates an Api instance. This can be used to retrieve a vehicle reporter that allows enabling location reporting to FleetEngine.
    * @param providerId - Unique identifier for the server provider.
    * @param vehicleId - Unique identifier for this vehicle for this provider.
-   * @param viewId - React ViewId given to the NavigationView component set up for the application. Can be retrieved using the {@link findNodeHandle()} API.
+   * @param onGetToken - Callback invoked by the native SDK whenever a fresh auth token is needed. This is called on every location update cycle.
+   * @param onStatusUpdate - Optional callback for status updates from Fleet Engine. **Android only** — on iOS, use `setOnVehicleUpdateSucceed` / `setOnVehicleUpdateFailed` on the vehicle reporter instead.
    * @returns Promise that resolves once the Api instance has been created.
    * @throws This rejects the promise in case there's an Api instance already created.
    */
@@ -82,40 +84,65 @@ export abstract class DriverApi {
     onStatusUpdate?: OnStatusUpdateCallback
   ): Promise<void>;
 
-  protected initializeEventEmitter = (
-    _onGetToken: OnGetTokenCallback, // TODO(jokerttu): consider removing or implementing this parameter
+  protected initializeEventListeners = (
+    onGetToken: OnGetTokenCallback,
     onStatusUpdate?: OnStatusUpdateCallback
   ): void => {
-    const eventEmitter = this.createEventEmitter();
+    // Clear any previous subscriptions to avoid duplicates on re-initialize
+    this.removeAllSubscriptions();
 
-    // Allow a single active listener.
-    eventEmitter.removeAllListeners(STATUS_UPDATE_EVENT_TYPE);
+    // Subscribe to native token requests — this is the core auth token bridge.
+    // When the native Driver SDK needs a token (e.g. on each location update),
+    // it emits onGetToken. We call the user's callback and resolve/reject back to native.
+    this.addSubscription(
+      this.nativeModule.onGetToken(event => {
+        onGetToken({
+          vehicleId: event.vehicleId ?? undefined,
+          taskId: event.taskId ?? undefined,
+        } satisfies AuthTokenContext)
+          .then(token => {
+            this.nativeModule.resolveAuthToken(event.requestId, token);
+          })
+          .catch(error => {
+            this.nativeModule.rejectAuthToken(
+              event.requestId,
+              error?.message ?? String(error)
+            );
+          });
+      })
+    );
 
     if (onStatusUpdate) {
-      eventEmitter.addListener(STATUS_UPDATE_EVENT_TYPE, event => {
-        const payload = event as StatusUpdateEvent | undefined;
-        if (!payload) return;
-        const { statusLevel, statusCode, statusMsg } = payload;
-        onStatusUpdate(statusLevel, statusCode, statusMsg);
-      });
+      this.addSubscription(
+        this.nativeModule.onStatusUpdate(event => {
+          onStatusUpdate(
+            (event.statusLevel as DriverStatusLevel) ?? DriverStatusLevel.INFO,
+            (event.statusCode as DriverStatusCode) ?? DriverStatusCode.DEFAULT,
+            event.statusMsg
+          );
+        })
+      );
     }
   };
+
+  private addSubscription(subscription: EventSubscription): void {
+    this.subscriptions.push(subscription);
+  }
+
+  private removeAllSubscriptions(): void {
+    for (const sub of this.subscriptions) {
+      sub.remove();
+    }
+    this.subscriptions = [];
+  }
 
   /**
    * Clears up the Api instance. This should be done once the Api is no longer required to prevent memory leaks.
    * @returns Promise that resolves once the Api has been cleared.
    */
-  clearInstance = (): Promise<void> => {
-    clearTimeout(this.fetchTokenTimeoutId);
-
-    const eventEmitter = this.createEventEmitter();
-
-    // Allow a single active listener.
-    eventEmitter.removeAllListeners(STATUS_UPDATE_EVENT_TYPE);
-    eventEmitter.removeAllListeners(VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE);
-    eventEmitter.removeAllListeners(VEHICLE_REPORTER_FAILED_UPDATE_TYPE);
-
-    return this.nativeModule.clearInstance();
+  clearInstance = async (): Promise<void> => {
+    await this.nativeModule.clearInstance();
+    this.removeAllSubscriptions();
   };
 
   /**
@@ -123,12 +150,8 @@ export abstract class DriverApi {
    *
    * @param enabled - whether abnormal SDK terminations should be reported.
    */
-  setAbnormalTerminationReportingEnabled = (
-    isEnabled: boolean
-  ): Promise<void> => {
-    return this.nativeModule.setAbnormalTerminationReporting(
-      isEnabled
-    ) as Promise<void>;
+  setAbnormalTerminationReportingEnabled = (isEnabled: boolean): void => {
+    this.nativeModule.setAbnormalTerminationReporting(isEnabled);
   };
 
   /**
@@ -141,63 +164,26 @@ export abstract class DriverApi {
   protected setLocationTrackingEnabled = async (
     isEnabled: boolean
   ): Promise<void> => {
-    this.isLocationTrackingEnabled = isEnabled;
-
-    if (isEnabled) {
-      await this.fetchAndSetToken();
-    } else {
-      clearTimeout(this.fetchTokenTimeoutId);
-    }
-
     await this.nativeModule.setLocationTrackingEnabled(isEnabled);
   };
 
-  protected pollAuthToken = (): void => {
-    this.fetchTokenTimeoutId = setTimeout(async () => {
-      await this.fetchAndSetToken();
-
-      if (this.isLocationTrackingEnabled) {
-        this.pollAuthToken();
-      }
-    }, TOKEN_UPDATE_INTERVAL_SECONDS);
-  };
-
-  protected setVehicleReporterListener = (
-    listener: VehicleReporterListener
+  protected setOnVehicleUpdateSucceed = (
+    callback: (vehicleUpdate: VehicleUpdate) => void
   ): void => {
-    const eventEmitter = this.createEventEmitter();
-
-    eventEmitter.removeAllListeners(VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE);
-    eventEmitter.removeAllListeners(VEHICLE_REPORTER_FAILED_UPDATE_TYPE);
-
-    eventEmitter.addListener(VEHICLE_REPORTER_SUCCEED_UPDATE_TYPE, event => {
-      const payload = event as VehicleReporterSuccessEvent | undefined;
-      if (payload && listener.onVehicleUpdateSucceed) {
-        listener.onVehicleUpdateSucceed(payload.vehicleUpdate);
-      }
-    });
-
-    eventEmitter.addListener(VEHICLE_REPORTER_FAILED_UPDATE_TYPE, event => {
-      const payload = event as VehicleReporterFailureEvent | undefined;
-      if (payload && listener.onVehicleUpdateFailed) {
-        listener.onVehicleUpdateFailed(payload.vehicleUpdate, payload.error);
-      }
-    });
+    this.addSubscription(
+      this.nativeModule.onVehicleUpdateSucceed(event => {
+        callback(event.vehicleUpdate);
+      })
+    );
   };
 
-  protected fetchAndSetToken = async (): Promise<void> => {
-    if (this.onGetTokenCallback == null) {
-      return;
-    }
-
-    if (!this.vehicleId) {
-      return;
-    }
-
-    const token = await this.onGetTokenCallback({
-      vehicleId: this.vehicleId,
-    });
-
-    await this.nativeModule.setAuthToken(token, this.vehicleId);
+  protected setOnVehicleUpdateFailed = (
+    callback: (vehicleUpdate: VehicleUpdate, error: VehicleUpdateError) => void
+  ): void => {
+    this.addSubscription(
+      this.nativeModule.onVehicleUpdateFailed(event => {
+        callback(event.vehicleUpdate, event.error);
+      })
+    );
   };
 }

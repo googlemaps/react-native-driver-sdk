@@ -16,49 +16,70 @@
 
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
+import type { EventEmitter } from 'react-native/Libraries/Types/CodegenTypesNamespace';
 
 // Note: Using Double instead of Int32 as codegen for TurboModules currently
 // fails to unbox values to Integer on iOS.
 
+type TaskInfoSpec = Readonly<{
+  taskId: string;
+  taskDurationSeconds: number;
+}>;
+
+type VehicleStopSpec = Readonly<{
+  vehicleStopState: number;
+  waypoint?: Readonly<{
+    position?: Readonly<{ lat: number; lng: number }>;
+    title?: string;
+    placeId?: string;
+    preferredHeading?: number;
+    vehicleStopover?: boolean;
+    preferSameSideOfRoad?: boolean;
+  }>;
+  taskInfoList: ReadonlyArray<TaskInfoSpec>;
+}>;
+
 type DeliveryVehicleSpec = Readonly<{
-  name: string;
-  lastLocation?: Readonly<{
+  providerId: string;
+  vehicleName: string;
+  vehicleId: string;
+  vehicleStops: ReadonlyArray<VehicleStopSpec>;
+}>;
+
+type VehicleUpdateSpec = Readonly<{
+  location: Readonly<{
     lat: number;
     lng: number;
+    time: number;
+    accuracy?: number;
+    altitude?: number;
+    bearing?: number;
+    speed: number;
+    verticalAccuracy?: number;
   }>;
-  navigationStatus: string;
-  remainingDistanceMeters: number;
-  remainingDuration: string;
-  remainingVehicleJourneySegments: ReadonlyArray<
-    Readonly<{
-      stop?: Readonly<{
-        plannedLocation?: Readonly<{
-          lat: number;
-          lng: number;
-        }>;
-        state: string;
-        tasks: ReadonlyArray<
-          Readonly<{
-            taskId: string;
-            taskType: string;
-            taskOutcome: string;
-          }>
-        >;
-      }>;
-      drivingDistanceMeters: number;
-      drivingDuration: string;
-      path: ReadonlyArray<
-        Readonly<{
-          lat: number;
-          lng: number;
-        }>
-      >;
-    }>
-  >;
-  currentRouteSegmentEndPoint?: Readonly<{
-    lat: number;
-    lng: number;
+  vehicleState: number;
+  destinationWaypoint?: Readonly<{
+    position: Readonly<{ lat: number; lng: number }>;
+    title?: string;
+    placeId?: string;
+    preferredHeading?: number;
+    vehicleStopover?: boolean;
+    preferSameSideOfRoad?: boolean;
   }>;
+  remainingTimeInSeconds?: number;
+  remainingDistanceInMeters?: number;
+}>;
+
+type VehicleUpdateErrorSpec = Readonly<{
+  code: number;
+  domain: string;
+  message: string;
+}>;
+
+type AuthTokenRequestSpec = Readonly<{
+  requestId: string;
+  vehicleId: string;
+  taskId: string;
 }>;
 
 export interface Spec extends TurboModule {
@@ -79,15 +100,33 @@ export interface Spec extends TurboModule {
   // SDK info
   getDriverSdkVersion(): Promise<string>;
 
-  // Auth token
-  setAuthToken(authToken: string, vehicleId: string): Promise<void>;
+  // Auth token - JS resolves a pending native token request
+  resolveAuthToken(requestId: string, token: string): void;
+  rejectAuthToken(requestId: string, error: string): void;
 
   // Abnormal termination
   setAbnormalTerminationReporting(isEnabled: boolean): void;
 
-  // Event emitter support
-  addListener(eventName: string): void;
-  removeListeners(count: number): void;
+  // Events emitted by native when auth token is needed
+  onGetToken: EventEmitter<AuthTokenRequestSpec>;
+
+  // Status & vehicle reporter events
+  onStatusUpdate: EventEmitter<
+    Readonly<{
+      statusLevel: string;
+      statusCode: string;
+      statusMsg: string;
+    }>
+  >;
+  onVehicleUpdateSucceed: EventEmitter<
+    Readonly<{ vehicleUpdate: VehicleUpdateSpec }>
+  >;
+  onVehicleUpdateFailed: EventEmitter<
+    Readonly<{
+      vehicleUpdate: VehicleUpdateSpec;
+      error: VehicleUpdateErrorSpec;
+    }>
+  >;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('DeliveryDriverModule');

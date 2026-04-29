@@ -26,14 +26,16 @@ GMSNavigationSession *_ridesharingSession;
 AuthTokenFactory *_tokenFactory;
 GMTDRidesharingDriverAPI *_rideSharingDriverAPI;
 GMTDDriverContext *_rideSharingDriverContext;
-DriverEventDispatcher *driverEventDispatch;
 
 - (void)initializeWithSession:(GMSNavigationSession *)session {
   _ridesharingSession = session;
 }
 
-- (void)createRidesharingInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId {
+- (void)createRidesharingInstance:(NSString *)providerId
+                        vehicleId:(NSString *)vehicleId
+             tokenRequestCallback:(TokenRequestCallback)callback {
   _tokenFactory = [[AuthTokenFactory alloc] init];
+  _tokenFactory.tokenRequestCallback = callback;
 
   _rideSharingDriverContext =
       [[GMTDDriverContext alloc] initWithAccessTokenProvider:_tokenFactory
@@ -43,8 +45,6 @@ DriverEventDispatcher *driverEventDispatch;
 
   _rideSharingDriverAPI =
       [[GMTDRidesharingDriverAPI alloc] initWithDriverContext:_rideSharingDriverContext];
-  driverEventDispatch = [DriverEventDispatcher allocWithZone:nil];
-  [driverEventDispatch startObserving];  // Enable event emission
 
   _ridesharingVehicleReporter = _rideSharingDriverAPI.vehicleReporter;
   [_ridesharingVehicleReporter addListener:self];
@@ -87,8 +87,12 @@ DriverEventDispatcher *driverEventDispatch;
   [GMTDRidesharingDriverAPI setAbnormalTerminationReportingEnabled:isEnabled];
 }
 
-- (void)setAuthToken:(NSString *)authToken {
-  [_tokenFactory setAuthToken:authToken];
+- (void)resolveAuthToken:(NSString *)requestId token:(NSString *)token {
+  [_tokenFactory resolveToken:requestId token:token];
+}
+
+- (void)rejectAuthToken:(NSString *)requestId error:(NSString *)error {
+  [_tokenFactory rejectToken:requestId error:error];
 }
 
 #pragma mark - GMTDVehicleReporterListener
@@ -96,44 +100,18 @@ DriverEventDispatcher *driverEventDispatch;
 // Vehicle Reporter Listener for when vehicle updates are successful
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didSucceedVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate {
-  NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
-  if (vehicleUpdate != nil) {
-    NSDictionary *dictionary =
-        [RidesharingDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
-    eventBody[@"vehicleUpdate"] = dictionary;
+  if (self.onVehicleUpdateSucceed) {
+    self.onVehicleUpdateSucceed(vehicleUpdate);
   }
-
-  [driverEventDispatch sendEventName:@"didSucceedVehicleUpdate" body:eventBody];
 }
 
 // Vehicle Reporter Listener for when vehicle updates fail
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didFailVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate
                withError:(NSError *)error {
-  NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
-
-  if (vehicleUpdate != nil) {
-    eventBody[@"vehicleUpdate"] =
-        [RidesharingDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
+  if (self.onVehicleUpdateFailed) {
+    self.onVehicleUpdateFailed(vehicleUpdate, error);
   }
-
-  if (error != nil) {
-    eventBody[@"error"] = @{
-      @"code" : @(error.code),
-      @"domain" : error.domain,
-      @"message" : error.description,
-    };
-  }
-
-  [driverEventDispatch sendEventName:@"didFailVehicleUpdate" body:eventBody];
-}
-
-- (void)addListener:(NSString *)eventName {
-  [driverEventDispatch startObserving];
-}
-
-- (void)removeListeners:(NSString *)eventName {
-  [driverEventDispatch stopObserving];
 }
 
 - (bool)isNavigatorInitialized {

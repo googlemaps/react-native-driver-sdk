@@ -18,41 +18,109 @@
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 
-// Used by GMTSAuthorization.
 static NSString *const kGRSDErrorDomain = @"GRSDErrorDomain";
-
 static const int kProviderErrorCode = 1000;
-
-static NSString *const kFailedToRetrieveTokenMessage =
-    @"There was an error retrieving the auth token.";
+static const NSTimeInterval kTokenTimeoutSeconds = 30.0;
 
 @implementation AuthTokenFactory {
-  NSString *_vehicleID;
-  NSString *_userToken;
+  NSMutableDictionary<NSString *, dispatch_semaphore_t> *_pendingSemaphores;
+  NSMutableDictionary<NSString *, NSString *> *_pendingTokens;
+  NSMutableDictionary<NSString *, NSString *> *_pendingErrors;
 }
 
-static NSError *GRSDError(NSInteger errorCode, NSString *description) {
-  NSDictionary<NSErrorUserInfoKey, NSString *> *userInfo = @{
-    NSLocalizedDescriptionKey : description,
-  };
-  return [NSError errorWithDomain:kGRSDErrorDomain code:errorCode userInfo:userInfo];
-}
-
-- (void)setAuthToken:(nonnull NSString *)authToken {
-  _userToken = authToken;
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    _pendingSemaphores = [NSMutableDictionary new];
+    _pendingTokens = [NSMutableDictionary new];
+    _pendingErrors = [NSMutableDictionary new];
+  }
+  return self;
 }
 
 #pragma mark - GMTDAuthorization
 
-// Function implementation for GMTDAuthorization to fetch token
 - (void)fetchTokenWithContext:(nullable GMTDAuthorizationContext *)authorizationContext
                    completion:(nonnull GMTDAuthTokenFetchCompletionHandler)completion {
-  if (!_userToken) {
-    completion(nil, GRSDError(kProviderErrorCode, kFailedToRetrieveTokenMessage));
+  if (!self.tokenRequestCallback) {
+    NSError *error =
+        [NSError errorWithDomain:kGRSDErrorDomain
+                            code:kProviderErrorCode
+                        userInfo:@{NSLocalizedDescriptionKey : @"Token request callback not set."}];
+    completion(nil, error);
     return;
   }
 
-  completion(_userToken, nil);
+  NSString *requestId = [[NSUUID UUID] UUIDString];
+  NSString *vehicleId = authorizationContext.vehicleID ?: @"";
+  NSString *taskId = authorizationContext.taskID ?: @"";
+
+  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+  @synchronized(self) {
+    _pendingSemaphores[requestId] = semaphore;
+  }
+
+  // Request token from JS
+  self.tokenRequestCallback(requestId, vehicleId, taskId);
+
+  // Block until JS responds (on a background queue — this is called by the Driver SDK
+  // on a dedicated thread, so blocking is expected and safe).
+  dispatch_time_t timeout =
+      dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kTokenTimeoutSeconds * NSEC_PER_SEC));
+  long result = dispatch_semaphore_wait(semaphore, timeout);
+
+  NSString *token = nil;
+  NSString *errorMessage = nil;
+
+  @synchronized(self) {
+    token = _pendingTokens[requestId];
+    errorMessage = _pendingErrors[requestId];
+    [_pendingSemaphores removeObjectForKey:requestId];
+    [_pendingTokens removeObjectForKey:requestId];
+    [_pendingErrors removeObjectForKey:requestId];
+  }
+
+  if (result != 0) {
+    NSError *error =
+        [NSError errorWithDomain:kGRSDErrorDomain
+                            code:kProviderErrorCode
+                        userInfo:@{NSLocalizedDescriptionKey : @"Auth token request timed out."}];
+    completion(nil, error);
+    return;
+  }
+
+  if (errorMessage) {
+    NSError *error = [NSError errorWithDomain:kGRSDErrorDomain
+                                         code:kProviderErrorCode
+                                     userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    completion(nil, error);
+    return;
+  }
+
+  completion(token, nil);
+}
+
+#pragma mark - Token Resolution
+
+- (void)resolveToken:(NSString *)requestId token:(NSString *)token {
+  @synchronized(self) {
+    dispatch_semaphore_t semaphore = _pendingSemaphores[requestId];
+    if (semaphore) {
+      _pendingTokens[requestId] = token;
+      dispatch_semaphore_signal(semaphore);
+    }
+  }
+}
+
+- (void)rejectToken:(NSString *)requestId error:(NSString *)error {
+  @synchronized(self) {
+    dispatch_semaphore_t semaphore = _pendingSemaphores[requestId];
+    if (semaphore) {
+      _pendingErrors[requestId] = error;
+      dispatch_semaphore_signal(semaphore);
+    }
+  }
 }
 
 @end

@@ -25,7 +25,6 @@ GMSNavigationSession *_deliverySession;
 AuthTokenFactory *_lmfsTokenFactory;
 GMTDDriverContext *_driverContext;
 GMTDDeliveryDriverAPI *_driverAPI;
-DriverEventDispatcher *lmfsEventDispatch;
 
 - (void)viewDidLoad {
   [super viewDidLoad];
@@ -36,8 +35,11 @@ DriverEventDispatcher *lmfsEventDispatch;
   _deliverySession = session;
 }
 
-- (void)createDeliveryDriverInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId {
+- (void)createDeliveryDriverInstance:(NSString *)providerId
+                           vehicleId:(NSString *)vehicleId
+                tokenRequestCallback:(TokenRequestCallback)callback {
   _lmfsTokenFactory = [[AuthTokenFactory alloc] init];
+  _lmfsTokenFactory.tokenRequestCallback = callback;
 
   GMTDDriverContext *driverContext =
       [[GMTDDriverContext alloc] initWithAccessTokenProvider:_lmfsTokenFactory
@@ -49,9 +51,6 @@ DriverEventDispatcher *lmfsEventDispatch;
   _vehicleReporter = _driverAPI.vehicleReporter;
   [_vehicleReporter addListener:self];
   [_deliverySession.roadSnappedLocationProvider addListener:_vehicleReporter];
-
-  lmfsEventDispatch = [DriverEventDispatcher allocWithZone:nil];
-  [lmfsEventDispatch startObserving];  // Enable event emission
 }
 
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled {
@@ -141,8 +140,12 @@ DriverEventDispatcher *lmfsEventDispatch;
   [GMTDDeliveryDriverAPI setAbnormalTerminationReportingEnabled:isEnabled];
 }
 
-- (void)setAuthToken:(NSString *)authToken {
-  [_lmfsTokenFactory setAuthToken:authToken];
+- (void)resolveAuthToken:(NSString *)requestId token:(NSString *)token {
+  [_lmfsTokenFactory resolveToken:requestId token:token];
+}
+
+- (void)rejectAuthToken:(NSString *)requestId error:(NSString *)error {
+  [_lmfsTokenFactory rejectToken:requestId error:error];
 }
 
 #pragma mark - GMTDVehicleReporterListener
@@ -150,38 +153,18 @@ DriverEventDispatcher *lmfsEventDispatch;
 // Vehicle Reporter Listener for when vehicle updates are successful
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didSucceedVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate {
-  NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
-  eventBody[@"vehicleUpdate"] =
-      [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
-
-  [lmfsEventDispatch sendEventName:@"didSucceedVehicleUpdate" body:eventBody];
+  if (self.onVehicleUpdateSucceed) {
+    self.onVehicleUpdateSucceed(vehicleUpdate);
+  }
 }
 
 // Vehicle Reporter Listener for when vehicle updates fail
 - (void)vehicleReporter:(GMTDVehicleReporter *)vehicleReporter
     didFailVehicleUpdate:(GMTDVehicleUpdate *)vehicleUpdate
                withError:(NSError *)error {
-  NSMutableDictionary *eventBody = [[NSMutableDictionary alloc] init];
-  eventBody[@"vehicleUpdate"] =
-      [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
-
-  if (error != nil) {
-    eventBody[@"error"] = @{
-      @"code" : @(error.code),
-      @"domain" : error.domain,
-      @"message" : error.description,
-    };
+  if (self.onVehicleUpdateFailed) {
+    self.onVehicleUpdateFailed(vehicleUpdate, error);
   }
-
-  [lmfsEventDispatch sendEventName:@"didFailVehicleUpdate" body:eventBody];
-}
-
-- (void)addListener:(NSString *)eventName {
-  [lmfsEventDispatch startObserving];
-}
-
-- (void)removeListeners:(NSString *)eventName {
-  [lmfsEventDispatch stopObserving];
 }
 
 - (bool)isNavigatorInitialized {

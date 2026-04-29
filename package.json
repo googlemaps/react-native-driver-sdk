@@ -109,7 +109,10 @@
     "moduleNameMapper": {
       "^react-native$": "<rootDir>/node_modules/react-native",
       "^@googlemaps/react-native-navigation-sdk$": "<rootDir>/node_modules/@googlemaps/react-native-navigation-sdk"
-    }
+    },
+    "setupFiles": [
+      "./jest.setup.js"
+    ]
   },
   "commitlint": {
     "extends": [

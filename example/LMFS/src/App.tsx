@@ -85,14 +85,18 @@ function LMFSSampleApp() {
     useState(true);
   const [isLocationTrackingEnabled, setLocationTrackingEnabled] =
     useState(false);
-  const [authToken, setAuthToken] = useState<string | null>(null);
   const [driverSdkVersion, setDriverSdkVersion] = useState<string>('');
   const [vehicleId, setVehicleId] = useState<string>(VEHICLE_ID_DEFAULT);
   const [tempVehicleId, setTempVehicleId] =
     useState<string>(VEHICLE_ID_DEFAULT);
 
   const clearInstance = useCallback(async () => {
-    await deliveryDriverApi.clearInstance();
+    deliveryDriverApi
+      .clearInstance()
+      .then(() => {
+        setLocationTrackingEnabled(false);
+      })
+      .catch(e => console.warn('clearInstance failed', e));
   }, []);
 
   const onNavigationReady = useCallback(() => {
@@ -115,26 +119,21 @@ function LMFSSampleApp() {
     [navigationController]
   );
 
-  const fetchAuthToken = useCallback(async () => {
-    if (!vehicleId) {
-      console.log('Vehicle ID not set, skipping auth token fetch');
-      return;
-    }
-    try {
+  const fetchAuthToken = useCallback(
+    async (tokenVehicleId?: string): Promise<string> => {
+      const vid = tokenVehicleId || vehicleId;
+      if (!vid) {
+        throw new Error('Vehicle ID not set');
+      }
       console.log('Fetching auth token...');
-      const tokenUrl = BASE_URL + '/token/delivery_driver/' + vehicleId;
+      const tokenUrl = BASE_URL + '/token/delivery_driver/' + vid;
       const response = await fetch(tokenUrl);
       const { token } = await response.json();
       console.log('Got token:', token);
-
-      setAuthToken(token);
-    } catch (error) {
-      console.log(
-        'There has been a problem connecting to the provider, please make sure it is running. ',
-        error
-      );
-    }
-  }, [vehicleId]);
+      return token;
+    },
+    [vehicleId]
+  );
 
   useEffect(() => {
     if (!vehicleId) {
@@ -145,7 +144,6 @@ function LMFSSampleApp() {
     console.log('Init LMFS Example app');
     setOnArrival(onArrival);
     setOnNavigationReady(onNavigationReady);
-    fetchAuthToken();
     deliveryDriverApi
       .getDriverSdkVersion()
       .then(version => setDriverSdkVersion(version))
@@ -163,7 +161,6 @@ function LMFSSampleApp() {
     setOnNavigationReady,
     removeAllListeners,
     vehicleId,
-    fetchAuthToken,
   ]);
 
   const createInstance = async () => {
@@ -172,10 +169,10 @@ function LMFSSampleApp() {
       await deliveryDriverApi.initialize(
         PROVIDER_ID,
         vehicleId,
-        _tokenContext => {
-          console.log('onGetToken call, return token: ', authToken);
-          // Check if the token is expired, in such case request a new one.
-          return Promise.resolve(authToken || '');
+        async tokenContext => {
+          console.log('onGetToken call for vehicle: ', tokenContext.vehicleId);
+          const token = await fetchAuthToken(tokenContext.vehicleId);
+          return token;
         },
         (statusLevel, statusCode, message) => {
           console.log(
@@ -184,13 +181,18 @@ function LMFSSampleApp() {
         }
       );
 
-      deliveryDriverApi.getDeliveryVehicleReporter().setListener({
-        onVehicleUpdateSucceed(vehicleUpdate) {
-          console.log('onVehicleUpdateSucceed: ', vehicleUpdate);
-        },
-        onVehicleUpdateFailed(_vehicleUpdate, error) {
-          console.log('onVehicleUpdateFailed: ', error);
-        },
+      const reporter = deliveryDriverApi.getDeliveryVehicleReporter();
+      reporter.setOnVehicleUpdateSucceed(vehicleUpdate => {
+        console.log('onVehicleUpdateSucceed: ', vehicleUpdate);
+      });
+      reporter.setOnVehicleUpdateFailed((vehicleUpdate, error) => {
+        console.log(
+          'onVehicleUpdateFailed: ',
+          error.code,
+          error.message,
+          'vehicleState:',
+          vehicleUpdate.vehicleState
+        );
       });
     } catch (error) {
       console.log('createInstance ', error);
@@ -294,7 +296,7 @@ function LMFSSampleApp() {
     console.log('Error: Starting Guidance Error');
   };
 
-  const toggleLocationTrackingEnabled = (value: boolean) => {
+  const toggleLocationTrackingEnabled = async (value: boolean) => {
     setLocationTrackingEnabled(value);
 
     if (value) {
@@ -303,9 +305,14 @@ function LMFSSampleApp() {
       navigationController?.stopUpdatingLocation();
     }
 
-    deliveryDriverApi
-      .getDeliveryVehicleReporter()
-      .setLocationTrackingEnabled(value);
+    try {
+      await deliveryDriverApi
+        .getDeliveryVehicleReporter()
+        .setLocationTrackingEnabled(value);
+    } catch (e) {
+      console.warn('setLocationTrackingEnabled failed:', e);
+      setLocationTrackingEnabled(!value);
+    }
   };
 
   const toggleAbnormalTerminationReporting = (value: boolean) => {

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { type Waypoint } from '@googlemaps/react-native-navigation-sdk';
+import type { Waypoint } from '@googlemaps/react-native-navigation-sdk';
+
 export enum VehicleStopState {
   UNSPECIFIED = 0,
   NEW = 1,
@@ -28,8 +29,8 @@ export interface TaskInfo {
 }
 
 export interface VehicleStop {
-  waypoint: Waypoint;
   vehicleStopState: VehicleStopState;
+  waypoint?: Waypoint;
   taskInfoList: TaskInfo[];
 }
 
