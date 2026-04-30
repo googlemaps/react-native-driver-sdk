@@ -18,7 +18,7 @@ package com.google.android.react.driversdk;
 
 /** SDK version constants for internal usage attribution. */
 public final class SdkVersion {
-  public static final String VERSION = "0.4.0"; // {x-release-please-version}
+  public static final String VERSION = "0.5.0"; // {x-release-please-version}
 
   public static final String ATTRIBUTION_ID =
       "gmp_git_reactnativedriversdk_v" + VERSION + "_android";
