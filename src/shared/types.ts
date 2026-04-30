@@ -19,9 +19,45 @@ import type {
   Waypoint,
 } from '@googlemaps/react-native-navigation-sdk';
 
+/**
+ * Severity level of a driver status update from Fleet Engine.
+ *
+ * **Android only.** No status updates are delivered on iOS;
+ * use the vehicle reporter's `setOnVehicleUpdateSucceed` / `setOnVehicleUpdateFailed` instead.
+ */
+export enum DriverStatusLevel {
+  DEBUG = 'DEBUG',
+  INFO = 'INFO',
+  WARNING = 'WARNING',
+  ERROR = 'ERROR',
+}
+
+/**
+ * Status code describing the type of driver status update.
+ *
+ * **Android only.** No status updates are delivered on iOS;
+ * use the vehicle reporter's `setOnVehicleUpdateSucceed` / `setOnVehicleUpdateFailed` instead.
+ */
+export enum DriverStatusCode {
+  DEFAULT = 'DEFAULT',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  VEHICLE_NOT_FOUND = 'VEHICLE_NOT_FOUND',
+  BACKEND_CONNECTIVITY_ERROR = 'BACKEND_CONNECTIVITY_ERROR',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  SERVICE_ERROR = 'SERVICE_ERROR',
+  FILE_ACCESS_ERROR = 'FILE_ACCESS_ERROR',
+  TRAVELED_ROUTE_ERROR = 'TRAVELED_ROUTE_ERROR',
+}
+
+/**
+ * Callback for driver status updates from Fleet Engine.
+ *
+ * **Android only.** No status updates are delivered on iOS;
+ * use the vehicle reporter's `setOnVehicleUpdateSucceed` / `setOnVehicleUpdateFailed` for iOS vehicle update callbacks.
+ */
 export type OnStatusUpdateCallback = (
-  statusLevel: string,
-  statusCode: string,
+  statusLevel: DriverStatusLevel,
+  statusCode: DriverStatusCode,
   statusMsg: string
 ) => void;
 
@@ -52,11 +88,24 @@ export interface VehicleReporter {
   setLocationReportingInterval(intervalSeconds: number): Promise<void>;
 
   /**
-   * Allows setting a listener for reporting updates. This is only
-   * available for iOS. For Android, please use {@link OnStatusUpdateCallback}.
-   * @param listener
+   * Sets a callback for successful vehicle updates.
+   *
+   * **iOS only.** No vehicle reporter updates are delivered on Android;
+   * use {@link OnStatusUpdateCallback} (passed to `initialize`) instead.
    */
-  setListener(listener: VehicleReporterListener): void;
+  setOnVehicleUpdateSucceed(
+    callback: (vehicleUpdate: VehicleUpdate) => void
+  ): void;
+
+  /**
+   * Sets a callback for failed vehicle updates.
+   *
+   * **iOS only.** No vehicle reporter updates are delivered on Android;
+   * use {@link OnStatusUpdateCallback} (passed to `initialize`) instead.
+   */
+  setOnVehicleUpdateFailed(
+    callback: (vehicleUpdate: VehicleUpdate, error: VehicleUpdateError) => void
+  ): void;
 }
 
 export interface VehicleUpdate {
@@ -72,12 +121,4 @@ export interface VehicleUpdateError {
   code: number;
   domain: string;
   message: string;
-}
-
-export interface VehicleReporterListener {
-  onVehicleUpdateSucceed(vehicleUpdate: VehicleUpdate): void;
-  onVehicleUpdateFailed(
-    vehicleUpdate: VehicleUpdate,
-    error: VehicleUpdateError
-  ): void;
 }

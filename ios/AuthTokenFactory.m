@@ -18,41 +18,86 @@
 #import <CoreLocation/CoreLocation.h>
 #import <Foundation/Foundation.h>
 
-// Used by GMTSAuthorization.
 static NSString *const kGRSDErrorDomain = @"GRSDErrorDomain";
-
 static const int kProviderErrorCode = 1000;
 
-static NSString *const kFailedToRetrieveTokenMessage =
-    @"There was an error retrieving the auth token.";
-
 @implementation AuthTokenFactory {
-  NSString *_vehicleID;
-  NSString *_userToken;
+  NSMutableDictionary<NSString *, GMTDAuthTokenFetchCompletionHandler> *_pendingCompletions;
 }
 
-static NSError *GRSDError(NSInteger errorCode, NSString *description) {
-  NSDictionary<NSErrorUserInfoKey, NSString *> *userInfo = @{
-    NSLocalizedDescriptionKey : description,
-  };
-  return [NSError errorWithDomain:kGRSDErrorDomain code:errorCode userInfo:userInfo];
-}
-
-- (void)setAuthToken:(nonnull NSString *)authToken {
-  _userToken = authToken;
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    _pendingCompletions = [NSMutableDictionary new];
+  }
+  return self;
 }
 
 #pragma mark - GMTDAuthorization
 
-// Function implementation for GMTDAuthorization to fetch token
 - (void)fetchTokenWithContext:(nullable GMTDAuthorizationContext *)authorizationContext
                    completion:(nonnull GMTDAuthTokenFetchCompletionHandler)completion {
-  if (!_userToken) {
-    completion(nil, GRSDError(kProviderErrorCode, kFailedToRetrieveTokenMessage));
+  if (!self.tokenRequestCallback) {
+    NSError *error =
+        [NSError errorWithDomain:kGRSDErrorDomain
+                            code:kProviderErrorCode
+                        userInfo:@{NSLocalizedDescriptionKey : @"Token request callback not set."}];
+    completion(nil, error);
     return;
   }
 
-  completion(_userToken, nil);
+  NSString *requestId = [[NSUUID UUID] UUIDString];
+  NSString *vehicleId = authorizationContext.vehicleID ?: @"";
+  NSString *taskId = authorizationContext.taskID ?: @"";
+
+  @synchronized(self) {
+    _pendingCompletions[requestId] = [completion copy];
+  }
+
+  // Request token from JS
+  self.tokenRequestCallback(requestId, vehicleId, taskId);
+}
+
+#pragma mark - Token Resolution
+
+- (void)resolveToken:(NSString *)requestId token:(NSString *)token {
+  GMTDAuthTokenFetchCompletionHandler completion;
+  @synchronized(self) {
+    completion = _pendingCompletions[requestId];
+    [_pendingCompletions removeObjectForKey:requestId];
+  }
+  if (completion) {
+    completion(token, nil);
+  }
+}
+
+- (void)rejectToken:(NSString *)requestId error:(NSString *)errorMessage {
+  GMTDAuthTokenFetchCompletionHandler completion;
+  @synchronized(self) {
+    completion = _pendingCompletions[requestId];
+    [_pendingCompletions removeObjectForKey:requestId];
+  }
+  if (completion) {
+    NSError *error = [NSError errorWithDomain:kGRSDErrorDomain
+                                         code:kProviderErrorCode
+                                     userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    completion(nil, error);
+  }
+}
+
+- (void)cancelAllPendingRequests {
+  NSDictionary<NSString *, GMTDAuthTokenFetchCompletionHandler> *completions;
+  @synchronized(self) {
+    completions = [_pendingCompletions copy];
+    [_pendingCompletions removeAllObjects];
+  }
+  NSError *error =
+      [NSError errorWithDomain:kGRSDErrorDomain
+                          code:kProviderErrorCode
+                      userInfo:@{NSLocalizedDescriptionKey : @"Driver instance cleared"}];
+  for (GMTDAuthTokenFetchCompletionHandler completion in completions.allValues) {
+    completion(nil, error);
+  }
 }
 
 @end

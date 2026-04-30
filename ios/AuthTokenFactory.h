@@ -19,10 +19,35 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class GRSDVehicleModel;
+/**
+ * Callback block invoked when the native Driver SDK needs an auth token.
+ * The implementation should emit an event to JS to request the token.
+ *
+ * @param requestId Unique identifier for this token request.
+ * @param vehicleId The vehicle ID from the authorization context.
+ * @param taskId The task ID from the authorization context (may be empty).
+ */
+typedef void (^TokenRequestCallback)(NSString *requestId, NSString *vehicleId, NSString *taskId);
 
+/**
+ * Auth token factory that requests tokens from JS via the React Native bridge.
+ *
+ * When the native Driver SDK needs a token (on each location update), this factory:
+ * 1. Generates a unique requestId
+ * 2. Invokes the callback to emit an event to JS
+ * 3. Stores the completion handler and invokes it when JS resolves or rejects via
+ *    resolveToken:/rejectToken:
+ *
+ * This mirrors the pattern used in the Flutter Driver SDK's AccessTokenProvider.
+ */
 @interface AuthTokenFactory : NSObject <GMTDAuthorization>
-- (void)setAuthToken:(nonnull NSString *)authToken;
+
+@property(nonatomic, copy, nullable) TokenRequestCallback tokenRequestCallback;
+
+- (void)resolveToken:(NSString *)requestId token:(NSString *)token;
+- (void)rejectToken:(NSString *)requestId error:(NSString *)error;
+- (void)cancelAllPendingRequests;
+
 @end
 
 NS_ASSUME_NONNULL_END

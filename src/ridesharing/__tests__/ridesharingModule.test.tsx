@@ -20,53 +20,54 @@ import { RidesharingDriverApi } from '../ridesharingDriverApi';
 const ridesharing = new RidesharingDriverApi();
 
 describe('ODRD', () => {
-  test('createRidesharingInstance', () => {
-    expect(
+  test('createRidesharingInstance', async () => {
+    await expect(
       ridesharing.initialize(
         'mobility-partner-lmfs',
         'vehicleId',
         () => Promise.resolve(''),
         () => {}
       )
-    ).toHaveBeenCalled();
+    ).resolves.toBeUndefined();
   });
 
-  test('setLocationTrackingEnabled', () => {
-    expect(
+  test('setLocationTrackingEnabled', async () => {
+    await expect(
       ridesharing
         .getRidesharingVehicleReporter()
         .setLocationTrackingEnabled(true)
-    ).toBe(true);
+    ).resolves.toBeUndefined();
   });
 
-  test('setVehicleState', () => {
-    expect(
+  test('setVehicleState', async () => {
+    await expect(
       ridesharing
         .getRidesharingVehicleReporter()
         .setVehicleState(VehicleState.ONLINE)
-    ).toBe(true);
+    ).resolves.toBeUndefined();
   });
 
-  test('setLocationReportingInterval', () => {
-    expect(
+  test('setLocationReportingInterval', async () => {
+    await expect(
       ridesharing
         .getRidesharingVehicleReporter()
         .setLocationReportingInterval(20)
-    ).toHaveBeenCalled();
+    ).resolves.toBeUndefined();
   });
 
-  test('clearInstance', () => {
-    expect(ridesharing.clearInstance()).toHaveBeenCalled();
+  test('clearInstance', async () => {
+    await expect(ridesharing.clearInstance()).resolves.toBeUndefined();
   });
 
   test('setAbnormalTerminationReporting', () => {
-    expect(ridesharing.setAbnormalTerminationReportingEnabled(true)).toBe(true);
+    expect(() =>
+      ridesharing.setAbnormalTerminationReportingEnabled(true)
+    ).not.toThrow();
   });
 
   it('async/await', async () => {
     expect.assertions(1);
-    const datagetRidesharingDriverSDKVersion =
-      await ridesharing.getDriverSdkVersion();
-    expect(datagetRidesharingDriverSDKVersion).toBe('3.1.1');
+    const version = await ridesharing.getDriverSdkVersion();
+    expect(version).toBe('1.0.0');
   });
 });

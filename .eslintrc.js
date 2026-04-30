@@ -79,9 +79,14 @@ module.exports = {
         '@typescript-eslint/no-require-imports': 'off',
       },
     },
-    // Test files
+    // Test files and Jest setup
     {
-      files: ['**/*.test.js', '**/*.test.ts', '**/e2e/**/*.js'],
+      files: [
+        '**/*.test.js',
+        '**/*.test.ts',
+        '**/e2e/**/*.js',
+        'jest.setup.js',
+      ],
       env: {
         jest: true,
       },

@@ -16,16 +16,24 @@
 
 #import <GoogleNavigation/GoogleNavigation.h>
 #import <GoogleRidesharingDriver/GoogleRidesharingDriver.h>
+#import <React/RCTBridgeModule.h>
 #import <UIKit/UIKit.h>
-#import "DriverEventDispatcher.h"
+#import "AuthTokenFactory.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void (^VehicleUpdateSuccessBlock)(GMTDVehicleUpdate *vehicleUpdate);
+typedef void (^VehicleUpdateFailureBlock)(GMTDVehicleUpdate *vehicleUpdate, NSError *error);
+
 @interface DeliveryDriverController : UIViewController <GMTDVehicleReporterListener>
 @property GMTDVehicleReporter *vehicleReporter;
+@property(nonatomic, copy, nullable) VehicleUpdateSuccessBlock onVehicleUpdateSucceed;
+@property(nonatomic, copy, nullable) VehicleUpdateFailureBlock onVehicleUpdateFailed;
 
 - (void)initializeWithSession:(GMSNavigationSession *)session;
-- (void)createDeliveryDriverInstance:(NSString *)providerId vehicleId:(NSString *)vehicleId;
+- (void)createDeliveryDriverInstance:(NSString *)providerId
+                           vehicleId:(NSString *)vehicleId
+                tokenRequestCallback:(TokenRequestCallback)callback;
 - (void)setLocationTrackingEnabled:(BOOL)isEnabled;
 - (void)setLocationReportingInterval:(double)interval;
 + (NSString *)getDriverSdkVersion;
@@ -33,9 +41,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)clearInstance;
 + (void)setAbnormalTerminationReporting:(BOOL)isEnabled;
 - (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject;
-- (void)setAuthToken:(NSString *)authToken;
-- (void)addListener:(NSString *)eventName;
-- (void)removeListeners:(NSString *)eventName;
+- (void)resolveAuthToken:(NSString *)requestId token:(NSString *)token;
+- (void)rejectAuthToken:(NSString *)requestId error:(NSString *)error;
 - (bool)isNavigatorInitialized;
 - (bool)isDriverApiInitialized;
 + (NSDictionary *)transformCLLocationToDictionary:(CLLocation *)location;

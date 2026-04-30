@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-import { DeliveryDriverModule } from '../native';
+import { DeliveryDriverModule, type DeliveryDriverModuleSpec } from '../native';
 import {
   DriverApi,
   type OnGetTokenCallback,
   type OnStatusUpdateCallback,
   type VehicleReporter,
 } from '../shared';
-import type { DeliveryVehicle } from './types';
+import { VehicleStopState, type DeliveryVehicle } from './types';
 
 type DeliveryVehicleReporter = VehicleReporter;
 
@@ -38,7 +38,7 @@ interface DeliveryVehicleManager {
 }
 
 /** Entry point into the DriverApi for the delivery vertical. */
-export class DeliveryDriverApi extends DriverApi {
+export class DeliveryDriverApi extends DriverApi<DeliveryDriverModuleSpec> {
   constructor() {
     super(DeliveryDriverModule);
   }
@@ -52,11 +52,10 @@ export class DeliveryDriverApi extends DriverApi {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 
+    // Set up event listeners first so the native token request can be handled
+    this.initializeEventListeners(onGetToken, onStatusUpdate);
+
     await this.nativeModule.createDeliveryDriverInstance(providerId, vehicleId);
-
-    await this.fetchAndSetToken();
-
-    this.initializeEventEmitter(onGetToken, onStatusUpdate);
   }
 
   /**
@@ -68,7 +67,8 @@ export class DeliveryDriverApi extends DriverApi {
       setLocationTrackingEnabled: this.setLocationTrackingEnabled,
       setLocationReportingInterval: intervalSeconds =>
         this.nativeModule.setLocationReportingInterval(intervalSeconds),
-      setListener: this.setVehicleReporterListener,
+      setOnVehicleUpdateSucceed: this.setOnVehicleUpdateSucceed,
+      setOnVehicleUpdateFailed: this.setOnVehicleUpdateFailed,
     };
   }
 
@@ -78,8 +78,46 @@ export class DeliveryDriverApi extends DriverApi {
    */
   getDeliveryVehicleManager(): DeliveryVehicleManager {
     return {
-      getDeliveryVehicle: () => this.nativeModule.getDeliveryVehicle(),
+      getDeliveryVehicle: async (): Promise<DeliveryVehicle> => {
+        const spec = await this.nativeModule.getDeliveryVehicle();
+        return {
+          providerId: spec.providerId,
+          vehicleName: spec.vehicleName,
+          vehicleId: spec.vehicleId,
+          vehicleStops: spec.vehicleStops.map(stop => ({
+            vehicleStopState: toVehicleStopState(stop.vehicleStopState),
+            waypoint: stop.waypoint
+              ? {
+                  position: stop.waypoint.position,
+                  title: stop.waypoint.title,
+                  placeId: stop.waypoint.placeId,
+                  preferredHeading: stop.waypoint.preferredHeading,
+                  vehicleStopover: stop.waypoint.vehicleStopover,
+                  preferSameSideOfRoad: stop.waypoint.preferSameSideOfRoad,
+                }
+              : undefined,
+            taskInfoList: stop.taskInfoList.map(task => ({
+              taskId: task.taskId,
+              taskDurationSeconds: task.taskDurationSeconds,
+            })),
+          })),
+        };
+      },
     };
   }
 }
+
+function toVehicleStopState(value: number): VehicleStopState {
+  switch (value) {
+    case 1:
+      return VehicleStopState.NEW;
+    case 2:
+      return VehicleStopState.ENROUTE;
+    case 3:
+      return VehicleStopState.ARRIVED;
+    default:
+      return VehicleStopState.UNSPECIFIED;
+  }
+}
+
 export default DeliveryDriverApi;

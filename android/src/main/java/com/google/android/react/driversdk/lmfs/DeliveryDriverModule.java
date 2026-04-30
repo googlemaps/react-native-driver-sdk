@@ -16,14 +16,12 @@ package com.google.android.react.driversdk.lmfs;
 import static java.util.Objects.requireNonNull;
 
 import android.app.Application;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.base.data.DriverContext;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.base.data.DriverContext.DriverStatusListener.StatusCode;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.base.data.DriverContext.DriverStatusListener.StatusLevel;
@@ -47,14 +45,26 @@ public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
   public static final String REACT_CLASS = NAME;
 
   private DeliveryVehicleReporter vehicleReporter = null;
-  private DriverAuthTokenFactory tokenFactory = new DriverAuthTokenFactory();
+  private final DriverAuthTokenFactory tokenFactory = new DriverAuthTokenFactory();
 
   ReactApplicationContext reactContext;
-  private int listenerCount = 0;
 
   public DeliveryDriverModule(ReactApplicationContext context) {
     super(context);
     this.reactContext = context;
+
+    // Wire up the token factory to emit events to JS when a token is needed.
+    tokenFactory.setTokenRequestCallback(
+        (requestId, vehicleId, taskId) -> {
+          UiThreadUtil.runOnUiThread(
+              () -> {
+                WritableMap map = Arguments.createMap();
+                map.putString("requestId", requestId);
+                map.putString("vehicleId", vehicleId);
+                map.putString("taskId", taskId);
+                emitOnGetToken(map);
+              });
+        });
   }
 
   @Override
@@ -91,7 +101,7 @@ public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
                       NavigationApi.getRoadSnappedLocationProvider(application))
                   .setDriverStatusListener(
                       (statusLevel, statusCode, statusMsg, error) -> {
-                        updateStatus(statusLevel, statusCode, statusMsg);
+                        emitStatusUpdate(statusLevel, statusCode, statusMsg);
                       })
                   .build();
 
@@ -157,14 +167,18 @@ public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
   /** Clears the instance of the DeliveryDriverApi */
   @Override
   public void clearInstance(Promise promise) {
-    try {
-      vehicleReporter = null;
-      DeliveryDriverApi.clearInstance();
+    UiThreadUtil.runOnUiThread(
+        () -> {
+          try {
+            tokenFactory.cancelAllPendingRequests();
+            vehicleReporter = null;
+            DeliveryDriverApi.clearInstance();
 
-      promise.resolve(true);
-    } catch (Exception e) {
-      promise.reject(e.toString(), e.getMessage(), e);
-    }
+            promise.resolve(true);
+          } catch (Exception e) {
+            promise.reject(e.toString(), e.getMessage(), e);
+          }
+        });
   }
 
   /**
@@ -209,54 +223,25 @@ public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
     DeliveryDriverApi.setAbnormalTerminationReportingEnabled(isEnabled);
   }
 
-  private void showToast(String errorMessage) {
-    Log.d(TAG, "showToast: " + errorMessage);
+  /** Called from JS to resolve a pending auth token request. */
+  @Override
+  public void resolveAuthToken(String requestId, String token) {
+    tokenFactory.resolveToken(requestId, token);
   }
 
-  /**
-   * The function that accepts update codes from the driverContext listener
-   *
-   * @param statusLevel
-   * @param statusCode
-   * @param statusMsg
-   */
-  public void updateStatus(StatusLevel statusLevel, StatusCode statusCode, String statusMsg) {
+  /** Called from JS to reject a pending auth token request. */
+  @Override
+  public void rejectAuthToken(String requestId, String error) {
+    tokenFactory.rejectToken(requestId, error);
+  }
+
+  private void emitStatusUpdate(StatusLevel statusLevel, StatusCode statusCode, String statusMsg) {
     if (reactContext != null) {
       WritableMap map = Arguments.createMap();
       map.putString("statusLevel", statusLevel.toString());
       map.putString("statusCode", statusCode.toString());
       map.putString("statusMsg", statusMsg);
-
-      this.reactContext
-          .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-          .emit("updateStatus", map);
+      emitOnStatusUpdate(map);
     }
-  }
-
-  /**
-   * Create an AuthTokenFactory to be used by DriverContext when creating a DeliveryDriverInstance.
-   *
-   * @param token jwt token from an authentication service
-   * @param vehicleId the vehicle ID
-   * @param promise
-   */
-  @Override
-  public void setAuthToken(String token, String vehicleId, Promise promise) {
-    try {
-      tokenFactory.setToken(token);
-      promise.resolve(null);
-    } catch (Exception e) {
-      promise.reject(e.getMessage());
-    }
-  }
-
-  @Override
-  public void addListener(String eventName) {
-    listenerCount++;
-  }
-
-  @Override
-  public void removeListeners(double count) {
-    listenerCount -= (int) count;
   }
 }

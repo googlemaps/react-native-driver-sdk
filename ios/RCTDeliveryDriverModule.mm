@@ -55,7 +55,50 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
 
     self->_driverController = [[DeliveryDriverController alloc] init];
     [self->_driverController initializeWithSession:session];
-    [self->_driverController createDeliveryDriverInstance:providerId vehicleId:vehicleId];
+
+    // Wire up vehicle reporter event callbacks to TurboModule EventEmitter.
+    __weak RCTDeliveryDriverModule *weakSelf = self;
+    self->_driverController.onVehicleUpdateSucceed = ^(GMTDVehicleUpdate *vehicleUpdate) {
+      RCTDeliveryDriverModule *strongSelf = weakSelf;
+      if (strongSelf) {
+        NSDictionary *updateDict =
+            [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
+        NSMutableDictionary *map = [NSMutableDictionary dictionary];
+        map[@"vehicleUpdate"] = updateDict;
+        [strongSelf emitOnVehicleUpdateSucceed:map];
+      }
+    };
+    self->_driverController.onVehicleUpdateFailed =
+        ^(GMTDVehicleUpdate *vehicleUpdate, NSError *error) {
+          RCTDeliveryDriverModule *strongSelf = weakSelf;
+          if (strongSelf) {
+            NSMutableDictionary *map = [NSMutableDictionary dictionary];
+            map[@"vehicleUpdate"] =
+                [DeliveryDriverController transformVehicleUpdateToDictionary:vehicleUpdate];
+            if (error != nil) {
+              map[@"error"] = @{
+                @"code" : @(error.code),
+                @"domain" : error.domain,
+                @"message" : error.description,
+              };
+            }
+            [strongSelf emitOnVehicleUpdateFailed:map];
+          }
+        };
+
+    [self->_driverController
+        createDeliveryDriverInstance:providerId
+                           vehicleId:vehicleId
+                tokenRequestCallback:^(NSString *requestId, NSString *vehicleId, NSString *taskId) {
+                  RCTDeliveryDriverModule *strongSelf = weakSelf;
+                  if (strongSelf) {
+                    NSMutableDictionary *map = [NSMutableDictionary dictionary];
+                    map[@"requestId"] = requestId;
+                    map[@"vehicleId"] = vehicleId;
+                    map[@"taskId"] = taskId;
+                    [strongSelf emitOnGetToken:map];
+                  }
+                }];
     resolve(@(YES));
   });
 }
@@ -76,9 +119,7 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
 }
 
 - (void)setAbnormalTerminationReporting:(BOOL)isEnabled {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [DeliveryDriverController setAbnormalTerminationReporting:isEnabled];
-  });
+  [DeliveryDriverController setAbnormalTerminationReporting:isEnabled];
 }
 
 - (void)setLocationReportingInterval:(double)intervalSeconds
@@ -97,9 +138,7 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
 }
 
 - (void)getDriverSdkVersion:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    resolve([DeliveryDriverController getDriverSdkVersion]);
-  });
+  resolve([DeliveryDriverController getDriverSdkVersion]);
 }
 
 - (void)getDeliveryVehicle:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
@@ -121,32 +160,12 @@ RCT_EXPORT_MODULE(DeliveryDriverModule);
   });
 }
 
-- (void)setAuthToken:(NSString *)authToken
-           vehicleId:(NSString *)vehicleId
-             resolve:(RCTPromiseResolveBlock)resolve
-              reject:(RCTPromiseRejectBlock)reject {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    if (self->_driverController == nil ||
-        [self->_driverController isDriverApiInitialized] == false) {
-      reject(kDriverApiNotInitializedErrorCode, kDriverApiNotInitializedErrorMessage, nil);
-      return;
-    }
-
-    [self->_driverController setAuthToken:authToken];
-    resolve(nil);
-  });
+- (void)resolveAuthToken:(NSString *)requestId token:(NSString *)token {
+  [self->_driverController resolveAuthToken:requestId token:token];
 }
 
-- (void)addListener:(NSString *)eventName {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self->_driverController addListener:eventName];
-  });
-}
-
-- (void)removeListeners:(double)count {
-  dispatch_async(dispatch_get_main_queue(), ^{
-    [self->_driverController removeListeners:[NSString stringWithFormat:@"%d", (int)count]];
-  });
+- (void)rejectAuthToken:(NSString *)requestId error:(NSString *)error {
+  [self->_driverController rejectAuthToken:requestId error:error];
 }
 
 @end

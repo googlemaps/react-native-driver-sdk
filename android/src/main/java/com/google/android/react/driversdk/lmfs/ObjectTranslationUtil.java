@@ -16,6 +16,7 @@ package com.google.android.react.driversdk.lmfs;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.base.data.TaskInfo;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.base.data.VehicleStop;
 import com.google.android.libraries.mapsplatform.transportation.driver.api.delivery.data.DeliveryVehicle;
@@ -36,19 +37,23 @@ class ObjectTranslationUtil {
       WritableMap vehicleStopMap = Arguments.createMap();
 
       // getWaypoint:
-      WritableMap waypointMap = Arguments.createMap();
       Waypoint waypoint = vehicleStop.getWaypoint();
-
-      waypointMap.putString("title", waypoint.getTitle());
-      waypointMap.putString("placeId", waypoint.getPlaceId());
-      WritableMap mapDestWaypointLatLng = Arguments.createMap();
-      mapDestWaypointLatLng.putDouble("lat", waypoint.getPosition().latitude);
-      mapDestWaypointLatLng.putDouble("lng", waypoint.getPosition().longitude);
-      waypointMap.putMap("position", mapDestWaypointLatLng);
-      waypointMap.putInt("preferredHeading", waypoint.getPreferredHeading());
-      waypointMap.putBoolean("vehicleStopover", waypoint.getVehicleStopover());
-      waypointMap.putBoolean("preferSameSideOfRoad", waypoint.getPreferSameSideOfRoad());
-      vehicleStopMap.putMap("waypoint", waypointMap);
+      if (waypoint != null) {
+        WritableMap waypointMap = Arguments.createMap();
+        waypointMap.putString("title", waypoint.getTitle());
+        waypointMap.putString("placeId", waypoint.getPlaceId());
+        LatLng position = waypoint.getPosition();
+        if (position != null) {
+          WritableMap positionMap = Arguments.createMap();
+          positionMap.putDouble("lat", position.latitude);
+          positionMap.putDouble("lng", position.longitude);
+          waypointMap.putMap("position", positionMap);
+        }
+        waypointMap.putInt("preferredHeading", waypoint.getPreferredHeading());
+        waypointMap.putBoolean("vehicleStopover", waypoint.getVehicleStopover());
+        waypointMap.putBoolean("preferSameSideOfRoad", waypoint.getPreferSameSideOfRoad());
+        vehicleStopMap.putMap("waypoint", waypointMap);
+      }
 
       // getTaskInfoList():
       WritableArray taskInfoList = Arguments.createArray();

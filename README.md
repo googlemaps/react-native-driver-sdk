@@ -175,24 +175,24 @@ To set up, specify your API key in the application delegate `ios/Runner/AppDeleg
 3. Second step is to initialize the Api. Navigation must be initialized before the Driver SDK is initialized.
 
     ```typescript
-        await ridesharingDriverApi
-            .initialize(
-              PROVIDER_ID,
-              VEHICLE_ID,
-              (tokenContext) => {
-                // Check if the token is expired, in such case request a new one.
-                return Promise.resolve(authToken || "");
-              },
-              (statusLevel, statusCode, message) => {
-                console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
-              }
-            );
+        await ridesharingDriverApi.initialize(
+          PROVIDER_ID,
+          VEHICLE_ID,
+          async (tokenContext) => {
+            // Fetch a fresh token from your backend.
+            // tokenContext.vehicleId contains the vehicle ID that needs the token.
+            const token = await fetchTokenFromBackend(tokenContext.vehicleId);
+            return token;
+          },
+          // Android only — on iOS, use vehicleReporter.setOnVehicleUpdateSucceed/setOnVehicleUpdateFailed instead.
+          (statusLevel, statusCode, message) => {
+            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+          }
+        );
     ```
 
-Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
+Note: The `initialize` method takes an `onGetToken` callback as parameter. This callback is invoked by the native SDK whenever a fresh auth token is needed (e.g. on each location update cycle). The callback receives an `AuthTokenContext` with the `vehicleId` and should return a `Promise<string>` that resolves to a valid token. Always fetch a fresh token in this callback rather than caching one.
 
-
-#### Getting a `RidesharingVehicleReporter`
 
 The vehicle reporter allows developers to enable/disable location reporting to Fleet Engine, as well as to report changes in the vehicle state (E.g. Online or Offline).
 
@@ -218,21 +218,24 @@ The vehicle reporter allows developers to enable/disable location reporting to F
 2. Second step is to initialize the Api.
 
     ```typescript
-        await deliveryApi
-            .initialize(
-              PROVIDER_ID,
-              DELIVERY_VEHICLE_ID,
-              (tokenContext) => {
-                // Check if the token is expired, in such case request a new one.
-                return Promise.resolve(authToken || "");
-              },
-              (statusLevel, statusCode, message) => {
-                console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
-              }
-            );
+        await deliveryApi.initialize(
+          PROVIDER_ID,
+          DELIVERY_VEHICLE_ID,
+          async (tokenContext) => {
+            // Fetch a fresh token from your backend.
+            // tokenContext.vehicleId contains the vehicle ID that needs the token.
+            // tokenContext.taskId may contain the task ID for delivery-specific tokens.
+            const token = await fetchTokenFromBackend(tokenContext.vehicleId);
+            return token;
+          },
+          // Android only — on iOS, use vehicleReporter.setOnVehicleUpdateSucceed/setOnVehicleUpdateFailed instead.
+          (statusLevel, statusCode, message) => {
+            console.log("onStatusUpdate: " + statusLevel + " " + statusCode + " " + message);
+          }
+        );
     ```
 
-Note: The `initialize` method takes a `onGetTokenCallback` field as parameter. This will be called periodically to ensure the token stays refresh while there's requests to Fleet Engine. Please make sure to check that the token is valid (e.g. checking expiration time) before setting it.
+Note: The `initialize` method takes an `onGetToken` callback as parameter. This callback is invoked by the native SDK whenever a fresh auth token is needed (e.g. on each location update cycle). The callback receives an `AuthTokenContext` with the `vehicleId` (and optionally `taskId` for delivery) and should return a `Promise<string>` that resolves to a valid token. Always fetch a fresh token in this callback rather than caching one.
 
 
 #### Getting a `DeliveryVehicleReporter`
@@ -246,11 +249,12 @@ The vehicle reporter allows developers to enable/disable location reporting to F
 
 #### Getting a `DeliveryVehicleManager`
 
-The vehicle managers allows developers to fetch the `DeliveryVehicle` linked to the Driver Api from Fleet Engine.
+The vehicle manager allows developers to fetch the `DeliveryVehicle` linked to the Driver Api from Fleet Engine.
 
 ```typescript
   const vehicleManager = deliveryApi.getDeliveryVehicleManager()
   const deliveryVehicle = await vehicleManager.getDeliveryVehicle();
+  console.log(deliveryVehicle.vehicleName, deliveryVehicle.vehicleId, deliveryVehicle.vehicleStops);
 ```
 
 ### Other APIs

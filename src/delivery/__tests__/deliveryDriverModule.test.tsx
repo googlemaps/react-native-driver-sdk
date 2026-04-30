@@ -19,47 +19,46 @@ import { DeliveryDriverApi } from '../deliveryDriverApi';
 const deliveryDriver = new DeliveryDriverApi();
 
 describe('LMFS', () => {
-  test('initialize', () => {
-    expect(
+  test('initialize', async () => {
+    await expect(
       deliveryDriver.initialize(
         'mobility-partner-lmfs',
         'vehicle_3_1689729828602',
         () => Promise.resolve(''),
         () => {}
       )
-    ).toHaveBeenCalled();
+    ).resolves.toBeUndefined();
   });
 
-  test('setLocationTrackingEnabled', () => {
-    expect(
+  test('setLocationTrackingEnabled', async () => {
+    await expect(
       deliveryDriver
         .getDeliveryVehicleReporter()
         .setLocationTrackingEnabled(true)
-    ).toBe(true);
+    ).resolves.toBeUndefined();
   });
 
-  test('setLocationReportingInterval', () => {
-    expect(
+  test('setLocationReportingInterval', async () => {
+    await expect(
       deliveryDriver
         .getDeliveryVehicleReporter()
         .setLocationReportingInterval(20)
-    ).toHaveBeenCalled();
+    ).resolves.toBeUndefined();
   });
 
-  test('clearInstance', () => {
-    expect(deliveryDriver.clearInstance()).toHaveBeenCalled();
+  test('clearInstance', async () => {
+    await expect(deliveryDriver.clearInstance()).resolves.toBeUndefined();
   });
 
   test('setAbnormalTerminationReporting', () => {
-    expect(deliveryDriver.setAbnormalTerminationReportingEnabled(true)).toBe(
-      true
-    );
+    expect(() =>
+      deliveryDriver.setAbnormalTerminationReportingEnabled(true)
+    ).not.toThrow();
   });
 
   it('async/await', async () => {
     expect.assertions(1);
-    const datagetRidesharingDriverSDKVersion =
-      await deliveryDriver.getDriverSdkVersion();
-    expect(datagetRidesharingDriverSDKVersion).toBe('3.1.1');
+    const version = await deliveryDriver.getDriverSdkVersion();
+    expect(version).toBe('1.0.0');
   });
 });

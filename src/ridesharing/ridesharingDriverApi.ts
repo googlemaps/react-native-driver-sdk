@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RidesharingModule } from '../native';
+import { RidesharingModule, type RidesharingModuleSpec } from '../native';
 import {
   type VehicleReporter,
   VehicleState,
@@ -33,7 +33,7 @@ interface RidesharingVehicleReporter extends VehicleReporter {
 }
 
 /** Entry point into the DriverApi for the ridesharing vertical. */
-export class RidesharingDriverApi extends DriverApi {
+export class RidesharingDriverApi extends DriverApi<RidesharingModuleSpec> {
   constructor() {
     super(RidesharingModule);
   }
@@ -47,11 +47,10 @@ export class RidesharingDriverApi extends DriverApi {
     this.onGetTokenCallback = onGetToken;
     this.vehicleId = vehicleId;
 
+    // Set up event listeners first so the native token request can be handled
+    this.initializeEventListeners(onGetToken, onStatusUpdate);
+
     await this.nativeModule.createRidesharingInstance(providerId, vehicleId);
-
-    await this.fetchAndSetToken();
-
-    this.initializeEventEmitter(onGetToken, onStatusUpdate);
   }
 
   /**
@@ -61,13 +60,13 @@ export class RidesharingDriverApi extends DriverApi {
   getRidesharingVehicleReporter = (): RidesharingVehicleReporter => {
     return {
       setVehicleState: async state => {
-        await this.fetchAndSetToken();
         await this.nativeModule.setVehicleState(state === VehicleState.ONLINE);
       },
       setLocationTrackingEnabled: this.setLocationTrackingEnabled,
       setLocationReportingInterval: (intervalSeconds: number) =>
         this.nativeModule.setLocationReportingInterval(intervalSeconds),
-      setListener: this.setVehicleReporterListener,
+      setOnVehicleUpdateSucceed: this.setOnVehicleUpdateSucceed,
+      setOnVehicleUpdateFailed: this.setOnVehicleUpdateFailed,
     };
   };
 }
