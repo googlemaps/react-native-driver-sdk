@@ -62,6 +62,7 @@ repositories {
 
 dependencies {
   implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:7.0.0'
+  implementation 'androidx.startup:startup-runtime:1.2.0'
   implementation 'com.facebook.react:react-native:+'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
   api 'com.google.guava:guava:31.0.1-android'
