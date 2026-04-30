@@ -8,7 +8,11 @@
   "packages": {
     ".": {
       "package-name": "@googlemaps/react-native-driver-sdk",
-      "changelog-path": "CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md",
+      "extra-files": [
+        "android/src/main/java/com/google/android/react/driversdk/SdkVersion.java",
+        "ios/SdkVersion.h"
+      ]
     }
   }
 }
