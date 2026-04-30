@@ -170,6 +170,7 @@ public class DeliveryDriverModule extends NativeDeliveryDriverModuleSpec {
     UiThreadUtil.runOnUiThread(
         () -> {
           try {
+            tokenFactory.cancelAllPendingRequests();
             vehicleReporter = null;
             DeliveryDriverApi.clearInstance();
 

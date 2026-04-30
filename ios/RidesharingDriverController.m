@@ -76,6 +76,7 @@ GMTDDriverContext *_rideSharingDriverContext;
 }
 
 - (void)clearInstance {
+  [_tokenFactory cancelAllPendingRequests];
   [_ridesharingVehicleReporter setLocationTrackingEnabled:NO];
   [_ridesharingVehicleReporter removeListener:self];
   [_ridesharingSession.roadSnappedLocationProvider removeListener:_ridesharingVehicleReporter];

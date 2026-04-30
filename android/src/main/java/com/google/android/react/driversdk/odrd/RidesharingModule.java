@@ -193,6 +193,7 @@ public class RidesharingModule extends NativeRidesharingModuleSpec {
     UiThreadUtil.runOnUiThread(
         () -> {
           try {
+            tokenFactory.cancelAllPendingRequests();
             RidesharingDriverApi.clearInstance();
             vehicleReporter = null;
 

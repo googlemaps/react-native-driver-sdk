@@ -85,4 +85,12 @@ public class DriverAuthTokenFactory implements AuthTokenFactory {
       future.setException(new RuntimeException(error));
     }
   }
+
+  /** Cancels all pending token requests. Called when the driver instance is cleared. */
+  public void cancelAllPendingRequests() {
+    for (SettableFuture<String> future : pendingRequests.values()) {
+      future.setException(new RuntimeException("Driver instance cleared"));
+    }
+    pendingRequests.clear();
+  }
 }

@@ -20,20 +20,15 @@
 
 static NSString *const kGRSDErrorDomain = @"GRSDErrorDomain";
 static const int kProviderErrorCode = 1000;
-static const NSTimeInterval kTokenTimeoutSeconds = 30.0;
 
 @implementation AuthTokenFactory {
-  NSMutableDictionary<NSString *, dispatch_semaphore_t> *_pendingSemaphores;
-  NSMutableDictionary<NSString *, NSString *> *_pendingTokens;
-  NSMutableDictionary<NSString *, NSString *> *_pendingErrors;
+  NSMutableDictionary<NSString *, GMTDAuthTokenFetchCompletionHandler> *_pendingCompletions;
 }
 
 - (instancetype)init {
   self = [super init];
   if (self) {
-    _pendingSemaphores = [NSMutableDictionary new];
-    _pendingTokens = [NSMutableDictionary new];
-    _pendingErrors = [NSMutableDictionary new];
+    _pendingCompletions = [NSMutableDictionary new];
   }
   return self;
 }
@@ -55,71 +50,53 @@ static const NSTimeInterval kTokenTimeoutSeconds = 30.0;
   NSString *vehicleId = authorizationContext.vehicleID ?: @"";
   NSString *taskId = authorizationContext.taskID ?: @"";
 
-  dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-
   @synchronized(self) {
-    _pendingSemaphores[requestId] = semaphore;
+    _pendingCompletions[requestId] = [completion copy];
   }
 
   // Request token from JS
   self.tokenRequestCallback(requestId, vehicleId, taskId);
-
-  // Block until JS responds (on a background queue — this is called by the Driver SDK
-  // on a dedicated thread, so blocking is expected and safe).
-  dispatch_time_t timeout =
-      dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kTokenTimeoutSeconds * NSEC_PER_SEC));
-  long result = dispatch_semaphore_wait(semaphore, timeout);
-
-  NSString *token = nil;
-  NSString *errorMessage = nil;
-
-  @synchronized(self) {
-    token = _pendingTokens[requestId];
-    errorMessage = _pendingErrors[requestId];
-    [_pendingSemaphores removeObjectForKey:requestId];
-    [_pendingTokens removeObjectForKey:requestId];
-    [_pendingErrors removeObjectForKey:requestId];
-  }
-
-  if (result != 0) {
-    NSError *error =
-        [NSError errorWithDomain:kGRSDErrorDomain
-                            code:kProviderErrorCode
-                        userInfo:@{NSLocalizedDescriptionKey : @"Auth token request timed out."}];
-    completion(nil, error);
-    return;
-  }
-
-  if (errorMessage) {
-    NSError *error = [NSError errorWithDomain:kGRSDErrorDomain
-                                         code:kProviderErrorCode
-                                     userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
-    completion(nil, error);
-    return;
-  }
-
-  completion(token, nil);
 }
 
 #pragma mark - Token Resolution
 
 - (void)resolveToken:(NSString *)requestId token:(NSString *)token {
+  GMTDAuthTokenFetchCompletionHandler completion;
   @synchronized(self) {
-    dispatch_semaphore_t semaphore = _pendingSemaphores[requestId];
-    if (semaphore) {
-      _pendingTokens[requestId] = token;
-      dispatch_semaphore_signal(semaphore);
-    }
+    completion = _pendingCompletions[requestId];
+    [_pendingCompletions removeObjectForKey:requestId];
+  }
+  if (completion) {
+    completion(token, nil);
   }
 }
 
-- (void)rejectToken:(NSString *)requestId error:(NSString *)error {
+- (void)rejectToken:(NSString *)requestId error:(NSString *)errorMessage {
+  GMTDAuthTokenFetchCompletionHandler completion;
   @synchronized(self) {
-    dispatch_semaphore_t semaphore = _pendingSemaphores[requestId];
-    if (semaphore) {
-      _pendingErrors[requestId] = error;
-      dispatch_semaphore_signal(semaphore);
-    }
+    completion = _pendingCompletions[requestId];
+    [_pendingCompletions removeObjectForKey:requestId];
+  }
+  if (completion) {
+    NSError *error = [NSError errorWithDomain:kGRSDErrorDomain
+                                         code:kProviderErrorCode
+                                     userInfo:@{NSLocalizedDescriptionKey : errorMessage}];
+    completion(nil, error);
+  }
+}
+
+- (void)cancelAllPendingRequests {
+  NSDictionary<NSString *, GMTDAuthTokenFetchCompletionHandler> *completions;
+  @synchronized(self) {
+    completions = [_pendingCompletions copy];
+    [_pendingCompletions removeAllObjects];
+  }
+  NSError *error =
+      [NSError errorWithDomain:kGRSDErrorDomain
+                          code:kProviderErrorCode
+                      userInfo:@{NSLocalizedDescriptionKey : @"Driver instance cleared"}];
+  for (GMTDAuthTokenFetchCompletionHandler completion in completions.allValues) {
+    completion(nil, error);
   }
 }
 

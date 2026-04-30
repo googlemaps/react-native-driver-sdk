@@ -70,6 +70,7 @@ GMTDDeliveryDriverAPI *_driverAPI;
 }
 
 - (void)clearInstance {
+  [_lmfsTokenFactory cancelAllPendingRequests];
   [_vehicleReporter setLocationTrackingEnabled:NO];
   [_vehicleReporter removeListener:self];
   [_deliverySession.roadSnappedLocationProvider removeListener:_vehicleReporter];

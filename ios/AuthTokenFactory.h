@@ -35,7 +35,8 @@ typedef void (^TokenRequestCallback)(NSString *requestId, NSString *vehicleId, N
  * When the native Driver SDK needs a token (on each location update), this factory:
  * 1. Generates a unique requestId
  * 2. Invokes the callback to emit an event to JS
- * 3. Blocks until JS resolves or rejects the request via resolveToken:/rejectToken:
+ * 3. Stores the completion handler and invokes it when JS resolves or rejects via
+ *    resolveToken:/rejectToken:
  *
  * This mirrors the pattern used in the Flutter Driver SDK's AccessTokenProvider.
  */
@@ -45,6 +46,7 @@ typedef void (^TokenRequestCallback)(NSString *requestId, NSString *vehicleId, N
 
 - (void)resolveToken:(NSString *)requestId token:(NSString *)token;
 - (void)rejectToken:(NSString *)requestId error:(NSString *)error;
+- (void)cancelAllPendingRequests;
 
 @end
 
