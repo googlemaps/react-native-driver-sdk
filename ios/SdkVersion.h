@@ -16,4 +16,4 @@
 
 #import <Foundation/Foundation.h>
 
-static NSString *const kRNDriverSdkVersion = @"0.4.0";  // x-release-please-version
+static NSString *const kRNDriverSdkVersion = @"0.5.0";  // x-release-please-version

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0](https://github.com/googlemaps/react-native-driver-sdk/compare/0.4.0...0.5.0) (2026-04-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removes support for the legacy React Native architecture. See MIGRATING.md for detailed migration instructions.
+
+### Features
+
+* add internal usage attibution ID ([#95](https://github.com/googlemaps/react-native-driver-sdk/issues/95)) ([b72e33a](https://github.com/googlemaps/react-native-driver-sdk/commit/b72e33a71ff0e266efc66a170abab7499abc2c5e))
+* support new React Native architecture ([#93](https://github.com/googlemaps/react-native-driver-sdk/issues/93)) ([1882ddf](https://github.com/googlemaps/react-native-driver-sdk/commit/1882ddf171e049559538a14eb009572b4f80fc85))
+
+
+### Bug Fixes
+
+* internal event handling and token handling ([#97](https://github.com/googlemaps/react-native-driver-sdk/issues/97)) ([45e76ba](https://github.com/googlemaps/react-native-driver-sdk/commit/45e76ba32fc35f2208b209ff196eb778c6cea9f8))
+
 ## [0.4.0](https://github.com/googlemaps/react-native-driver-sdk/compare/0.3.2...0.4.0) (2025-12-19)
 
 
