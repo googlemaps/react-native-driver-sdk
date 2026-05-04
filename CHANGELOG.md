@@ -5,7 +5,6 @@
 
 ### ⚠ BREAKING CHANGES
 
-* Token and event handling updated. See MIGRATING.md for detailed migration instructions.
 * Removes support for the legacy React Native architecture. See MIGRATING.md for detailed migration instructions.
 
 ### Features
