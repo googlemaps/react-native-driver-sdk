@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/googlemaps/react-native-driver-sdk/compare/0.5.0...0.6.0) (2026-05-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* Upgades @googlemaps/react-native-navigation-sdk to next major version v0.16.0, see release notes at: https://github.com/googlemaps/react-native-navigation-sdk/releases/tag/v0.16.0
+
+### Features
+
+* upgrade Navigation SDK to version 0.16.0 ([#102](https://github.com/googlemaps/react-native-driver-sdk/issues/102)) ([910e7ca](https://github.com/googlemaps/react-native-driver-sdk/commit/910e7cae8432dcbda5d167887ff2200cc410d394))
+
 ## [0.5.0](https://github.com/googlemaps/react-native-driver-sdk/compare/0.4.0...0.5.0) (2026-04-30)
 
 
