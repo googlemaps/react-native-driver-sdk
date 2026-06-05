@@ -233,7 +233,7 @@ jobs:
 
   build-ios-lmfs:
     runs-on:
-      labels: macos-latest-xlarge
+      labels: macos-26-xlarge
     timeout-minutes: 45
     env:
       TURBO_CACHE_DIR: .turbo/ios
@@ -290,7 +290,7 @@ jobs:
 
   build-ios-odrd:
     runs-on:
-      labels: macos-latest-xlarge
+      labels: macos-26-xlarge
     timeout-minutes: 45
     env:
       TURBO_CACHE_DIR: .turbo/ios
