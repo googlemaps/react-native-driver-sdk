@@ -58,13 +58,14 @@
     "build": "bob build"
   },
   "dependencies": {
-    "@googlemaps/react-native-navigation-sdk": "^0.16.0"
+    "@googlemaps/react-native-navigation-sdk": "0.17.1"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",
     "@evilmartians/lefthook": "^1.5.0",
-    "@react-native/babel-preset": "^0.83.1",
-    "@react-native/typescript-config": "^0.83.1",
+    "@react-native/babel-preset": "0.87.1",
+    "@react-native/jest-preset": "0.87.1",
+    "@react-native/typescript-config": "0.87.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^29.5.5",
     "@types/react": "19.2.0",
@@ -83,10 +84,10 @@
     "eslint-plugin-testing-library": "^6.2.2",
     "jest": "^29.7.0",
     "prettier": "^3.6.2",
-    "react": "19.2.0",
-    "react-native": "0.83.1",
+    "react": "19.2.3",
+    "react-native": "0.87.1",
     "react-native-builder-bob": "^0.40.13",
-    "react-test-renderer": "19.2.0",
+    "react-test-renderer": "19.2.3",
     "turbo": "^1.10.7",
     "typescript": "^5.8.3"
   },
@@ -100,7 +101,7 @@
   ],
   "packageManager": "yarn@3.6.4",
   "jest": {
-    "preset": "react-native",
+    "preset": "@react-native/jest-preset",
     "modulePathIgnorePatterns": [
       "<rootDir>/example/LMFS/node_modules",
       "<rootDir>/example/ODRD/node_modules",
