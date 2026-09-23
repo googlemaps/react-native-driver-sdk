@@ -58,7 +58,7 @@
     "build": "bob build"
   },
   "dependencies": {
-    "@googlemaps/react-native-navigation-sdk": "0.17.1"
+    "@googlemaps/react-native-navigation-sdk": "0.17.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.2.2",

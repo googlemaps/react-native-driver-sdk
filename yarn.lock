@@ -1878,7 +1878,7 @@ __metadata:
   dependencies:
     "@commitlint/config-conventional": ^19.2.2
     "@evilmartians/lefthook": ^1.5.0
-    "@googlemaps/react-native-navigation-sdk": 0.17.1
+    "@googlemaps/react-native-navigation-sdk": 0.17.0
     "@react-native/babel-preset": 0.87.1
     "@react-native/jest-preset": 0.87.1
     "@react-native/typescript-config": 0.87.1
@@ -1912,13 +1912,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@googlemaps/react-native-navigation-sdk@npm:0.17.1":
-  version: 0.17.1
-  resolution: "@googlemaps/react-native-navigation-sdk@npm:0.17.1"
+"@googlemaps/react-native-navigation-sdk@npm:0.17.0":
+  version: 0.17.0
+  resolution: "@googlemaps/react-native-navigation-sdk@npm:0.17.0"
   peerDependencies:
     react: "*"
     react-native: ">=0.87.0"
-  checksum: 3752cd3bb6ebc2d2c4f486cd41788c42bd521b817082e037f76f2072e6d05cc2ab897d00a3d90c2590fbfa95dbd479fe12aa40e4a652f6f973b1f19eeb770508
+  checksum: f6597f625a587f8f0a93f0f7fb02bf9ff1482d730d3fc84f861fe5ca9d3a5ef3b72e63fa0b8ff67e51d42386108f505fba24051d1233743d969156fcba47f693
   languageName: node
   linkType: hard
 
@@ -9520,7 +9520,7 @@ __metadata:
     "@babel/core": ^7.26.0
     "@babel/preset-env": ^7.26.0
     "@babel/runtime": ^7.26.0
-    "@googlemaps/react-native-navigation-sdk": 0.17.1
+    "@googlemaps/react-native-navigation-sdk": 0.17.0
     "@react-native-community/cli": 20.0.0
     "@react-native-community/cli-platform-android": 20.0.0
     "@react-native-community/cli-platform-ios": 20.0.0
@@ -9553,7 +9553,7 @@ __metadata:
     "@babel/core": ^7.26.0
     "@babel/preset-env": ^7.26.0
     "@babel/runtime": ^7.26.0
-    "@googlemaps/react-native-navigation-sdk": 0.17.1
+    "@googlemaps/react-native-navigation-sdk": 0.17.0
     "@react-native-community/cli": 20.0.0
     "@react-native-community/cli-platform-android": 20.0.0
     "@react-native-community/cli-platform-ios": 20.0.0
