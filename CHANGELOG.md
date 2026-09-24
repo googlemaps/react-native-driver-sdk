@@ -5,7 +5,9 @@
 
 ### ⚠ BREAKING CHANGES
 
-* upgrade React Native to 0.87.1 and Android Driver SDK to 7.1.0 and RN navigation sdk to 0.17.0 ([#110](https://github.com/googlemaps/react-native-driver-sdk/issues/110))
+* Requires React Native 0.87.0 or later.
+* Android projects require Kotlin Gradle Plugin 2.3.0 or later.
+* Upgrades the underlying Google Navigation SDK to Android 7.9.0 and iOS 10.15.0.
 
 ### Features
 
