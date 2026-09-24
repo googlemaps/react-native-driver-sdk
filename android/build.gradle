@@ -17,7 +17,6 @@ def safeExtGet(prop, fallback) {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 apply plugin: 'com.facebook.react'
 
 android {
@@ -40,9 +39,9 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError false
-        disable "GradleCompatible"
+    lint {
+        abortOnError = false
+        disable += "GradleCompatible"
     }
 
     sourceSets {
@@ -61,7 +60,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:7.0.0'
+  implementation 'com.google.android.libraries.mapsplatform.transportation:transportation-driver:7.1.0'
   implementation 'androidx.startup:startup-runtime:1.2.0'
   implementation 'com.facebook.react:react-native:+'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

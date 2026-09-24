@@ -21,7 +21,7 @@ import {
   requestMultiple,
   RESULTS,
 } from 'react-native-permissions';
-import Snackbar from 'react-native-snackbar';
+import { Snackbar } from 'react-native-snackbar';
 
 const usePermissions = () => {
   const [arePermissionsApproved, setArePermissionsApproved] = useState(false);

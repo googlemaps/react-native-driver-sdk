@@ -24,16 +24,16 @@ buildscript {
         compileSdkVersion = 36
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
-        kotlinVersion = "2.0.21"
+        kotlinVersion = "2.3.0"
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
+        classpath("com.android.tools.build:gradle:9.2.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1")
     }
 }
@@ -63,7 +63,7 @@ allprojects {
 
                 dependencies {
                     // Desugar Java 8+ APIs
-                    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.4'
+                    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.5'
                 }
             }
         }
